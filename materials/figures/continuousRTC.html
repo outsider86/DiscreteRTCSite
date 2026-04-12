@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Continuous RTC Visualization</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #f7f7f5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+  }
+  #container {
+    width: 100%;
+    max-width: 1050px;
+    height: 300px;
+    position: relative;
+  }
+  svg { width: 100%; height: 100%; display: block; }
+</style>
+</head>
+<body>
+<div id="container">
+  <svg id="viz" viewBox="0 0 1050 300" preserveAspectRatio="xMidYMid meet">
+    <defs>
+      <pattern id="crosshatchGray" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+        <rect width="5" height="5" fill="#d8d8d8"/>
+        <line x1="0" y1="0" x2="0" y2="5" stroke="#b8b8b8" stroke-width="0.8"/>
+        <line x1="0" y1="0" x2="5" y2="0" stroke="#b8b8b8" stroke-width="0.8"/>
+      </pattern>
+      <pattern id="gridGreenDark" width="5" height="5" patternUnits="userSpaceOnUse">
+        <rect width="5" height="5" fill="#4a8f4a"/>
+        <line x1="0" y1="0" x2="0" y2="5" stroke="#3a7a3a" stroke-width="0.7"/>
+        <line x1="0" y1="0" x2="5" y2="0" stroke="#3a7a3a" stroke-width="0.7"/>
+      </pattern>
+      <pattern id="gridGreenLight" width="6" height="6" patternUnits="userSpaceOnUse">
+        <rect width="6" height="6" fill="#7fbf7b"/>
+        <line x1="0" y1="0" x2="0" y2="6" stroke="#5aa05a" stroke-width="0.5"/>
+        <line x1="0" y1="0" x2="6" y2="0" stroke="#5aa05a" stroke-width="0.5"/>
+      </pattern>
+    </defs>
+  </svg>
+</div>
+
+<script>
+(function() {
+  const SVG_NS = "http://www.w3.org/2000/svg";
+  const svg = document.getElementById("viz");
+  const W = 1050, H = 300;
+
+  // ── RTC Parameters (FIXED) ──
+  const D = 3;          // inferenceDelay = 3 (frozen prefix size)
+  const H_EXE = 5;     // executionHorizon = 5
+  const S = 14;         // chunkSize = 14
+  const OVERLAP = S - D - H_EXE; // = 6
+  const FRESH = H_EXE;           // = 5
+  // Partition: [0..2] frozen(3), [3..8] overlap(6), [9..13] fresh(5)
+
+  // ── Layout ──
+  const DIVIDER_X = 160;
+  const DOT_SPACING = 50;
+  const TRAJ_Y_CENTER = 145;
+  const TRAJ_Y_AMP = 45;
+
+  // ── Timing ──
+  const CYCLE_DURATION = 4800;
+  const INIT_FRAC = 0.28;       // initialization: ~1344ms (only pause, slightly longer)
+  const MOTION_FRAC = 1 - INIT_FRAC; // 0.80 — continuous motion for all 5 actions
+  const INIT_END = INIT_FRAC;
+  // Inference ends exactly when 3 actions have been executed.
+  // Scroll is nearly constant speed (tiny smoothing at very start/end only),
+  // so 3/5 of motion time = 3/5 of scroll distance exactly.
+  const INFER_END = INIT_FRAC + MOTION_FRAC * (D / H_EXE); // = 0.20 + 0.80 * 0.6 = 0.68
+  const INFER_FRAC = INFER_END - INIT_END;
+  const EXEC_FRAC = 1.0 - INFER_END;
+
+  // ── State ──
+  let cycleStartTime = 0;
+  let executionBoundary = 0; // absolute action index at left edge
+  let chunkCycle = 0;
+
+  // Scatter cache for deterministic noise particles
+  const scatterCache = {};
+  function getScatter(ai) {
+    if (!scatterCache[ai]) {
+      const seed = ai * 137.5 + 42.3;
+      scatterCache[ai] = Array.from({length: 7}, (_, i) => ({
+        dx: (prng(seed + i * 13.7) - 0.5) * 35,
+        dy: (prng(seed + i * 27.3 + 5) - 0.5) * 75,
+        size: 2 + prng(seed + i * 41.1 + 10) * 2.5,
+        phase: prng(seed + i * 53.7 + 15) * Math.PI * 2
+      }));
+    }
+    return scatterCache[ai];
+  }
+  function prng(x) { const s = Math.sin(x) * 43758.5453; return s - Math.floor(s); }
+
+  function easeInOutCubic(t) { return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2; }
+  function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+  function easeInOutQuad(t) { return t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t+2,2)/2; }
+
+  function trajectoryY(worldX) {
+    return TRAJ_Y_CENTER
+      + Math.sin(worldX * 0.0085) * TRAJ_Y_AMP * 0.7
+      + Math.sin(worldX * 0.014 + 1.2) * TRAJ_Y_AMP * 0.4
+      + Math.cos(worldX * 0.005 + 0.5) * TRAJ_Y_AMP * 0.25;
+  }
+
+  function actionToWorldX(ai) { return ai * DOT_SPACING; }
+  function actionToScreenX(ai, scroll) {
+    return DIVIDER_X + (ai - executionBoundary) * DOT_SPACING - scroll;
+  }
+
+  function lerpRGB(c1, c2, t) {
+    t = Math.max(0, Math.min(1, t));
+    return [Math.round(c1[0]+(c2[0]-c1[0])*t), Math.round(c1[1]+(c2[1]-c1[1])*t), Math.round(c1[2]+(c2[2]-c1[2])*t)];
+  }
+  function rgbStr(c) { return `rgb(${c[0]},${c[1]},${c[2]})`; }
+
+  const COL_DARK_GREEN = [74, 143, 74];
+  const COL_DARK_GREEN_S = [58, 122, 58];
+  const COL_LIGHT_GREEN = [127, 191, 123];
+  const COL_LIGHT_GREEN_S = [90, 160, 90];
+  const COL_YELLOW = [231, 199, 95];
+  const COL_YELLOW_S = [196, 168, 64];
+
+  // ── Main render ──
+  function render(timestamp) {
+    const t = timestamp / 1000;
+    const cycleElapsed = timestamp - cycleStartTime;
+    let cycleT = cycleElapsed / CYCLE_DURATION;
+
+    if (cycleT >= 1.0) {
+      executionBoundary += H_EXE;
+      chunkCycle++;
+      cycleStartTime = timestamp;
+      cycleT = 0;
+      for (const key in scatterCache) {
+        if (parseInt(key) < executionBoundary - 20) delete scatterCache[key];
+      }
+    }
+
+    // ── Determine phase and local progress ──
+    let phase, phaseT;
+    if (cycleT < INIT_END) {
+      phase = "init";
+      phaseT = cycleT / INIT_FRAC; // 0→1
+    } else if (cycleT < INFER_END) {
+      phase = "infer";
+      phaseT = (cycleT - INIT_END) / INFER_FRAC; // 0→1
+    } else {
+      phase = "exec";
+      phaseT = (cycleT - INFER_END) / EXEC_FRAC; // 0→1
+    }
+
+    // ── Scroll ──
+    // Init: no scroll (the only pause)
+    // Inference + execution: constant speed scroll with tiny smoothing at start/end
+    // This ensures 3/5 of time = exactly 3 actions scrolled (inference ends at action 3)
+    let scroll = 0;
+    if (phase === "init") {
+      scroll = 0;
+    } else {
+      const motionT = (cycleT - INIT_END) / MOTION_FRAC; // 0→1
+      // Nearly linear: smooth only the first and last 8% of motion
+      const smoothZone = 0.08;
+      let scrollT;
+      if (motionT < smoothZone) {
+        // Ease in from pause: quadratic ramp up
+        scrollT = (motionT / smoothZone) * (motionT / smoothZone) * smoothZone;
+      } else if (motionT > 1 - smoothZone) {
+        // Ease out before next cycle: quadratic ramp down
+        const tail = (1 - motionT) / smoothZone;
+        scrollT = 1 - (tail * tail) * smoothZone;
+      } else {
+        // Linear in the middle
+        scrollT = motionT;
+      }
+      scroll = scrollT * H_EXE * DOT_SPACING;
+    }
+
+    // Eased phase progress for color transitions
+    const initP = phase === "init" ? easeOutCubic(phaseT) : 1;
+    // inferP is LINEAR: transitions progress at constant rate over the full 2304ms
+    // (= exactly the time to execute 3 actions at 768ms each)
+    const inferP = phase === "infer" ? phaseT : (phase === "exec" ? 1 : 0);
+    const execP = phase === "exec" ? easeOutCubic(phaseT) : 0;
+
+    // Clear SVG
+    while (svg.lastChild && svg.lastChild.tagName !== "defs") svg.removeChild(svg.lastChild);
+
+    // ── Background ──
+    svg.appendChild(createSVG("rect", { x:0, y:0, width:DIVIDER_X, height:H, fill:"#f0f0ec", opacity:0.6 }));
+
+    // ── Divider ──
+    svg.appendChild(createSVG("line", { x1:DIVIDER_X, y1:30, x2:DIVIDER_X, y2:H-50, stroke:"#8f8f8f", "stroke-width":1.5 }));
+    svg.appendChild(createText(DIVIDER_X, H-38, "Current time", "#8f8f8f", 11, "middle"));
+
+    // ── Section labels ──
+    const chunkStart = executionBoundary;
+    const frozenEndX = actionToScreenX(chunkStart + D, scroll);
+    const overlapEndX = actionToScreenX(chunkStart + D + OVERLAP, scroll);
+    const freshEndX = actionToScreenX(chunkStart + S, scroll);
+    const frozenMidX = (Math.max(DIVIDER_X+5, actionToScreenX(chunkStart, scroll)) + frozenEndX) / 2;
+    const overlapMidX = (frozenEndX + overlapEndX) / 2;
+    const freshMidX = (overlapEndX + freshEndX) / 2;
+    const beyondMidX = freshEndX + 3 * DOT_SPACING;
+
+    if (frozenMidX > DIVIDER_X && frozenMidX < W)
+      svg.appendChild(createText(frozenMidX, 28, "Frozen actions", "#9a9a9a", 11, "middle"));
+    if (overlapMidX > DIVIDER_X && overlapMidX < W)
+      svg.appendChild(createText(overlapMidX, 28, "Updated actions", "#9a9a9a", 11, "middle"));
+    if (freshMidX > DIVIDER_X && freshMidX < W)
+      svg.appendChild(createText(freshMidX, 28, "New actions", "#9a9a9a", 11, "middle"));
+
+    // Dashed separators
+    [frozenEndX, overlapEndX, freshEndX].forEach(x => {
+      if (x > DIVIDER_X && x < W)
+        svg.appendChild(createSVG("line", { x1:x, y1:40, x2:x, y2:H-42, stroke:"#c8c8c8", "stroke-width":0.8, "stroke-dasharray":"4,3" }));
+    });
+
+    // Repeating dashed delay axes: length = D (3 actions), spawned every H_EXE (5 actions)
+    // Anchored to the global action stream, scroll with execution
+    const markerY = H - 40;
+    const markerLabelY = H - 20;
+    // Find the first axis startAi that could be visible
+    // Axes start at action indices: 0, 5, 10, 15, ... (multiples of H_EXE)
+    const firstAxisAi = Math.floor((executionBoundary - 5) / H_EXE) * H_EXE;
+    let labelDrawn = false;
+    for (let axisStart = firstAxisAi; axisStart < executionBoundary + S + 15; axisStart += H_EXE) {
+      const axisEnd = axisStart + D; // each axis spans exactly 3 actions
+      const leftX = actionToScreenX(axisStart, scroll);
+      const rightX = actionToScreenX(axisEnd, scroll);
+
+      // Remove if fully past current-time line
+      if (rightX < DIVIDER_X) continue;
+      // Skip if fully off-screen right
+      if (leftX > W + 20) continue;
+
+      // Clamp to visible area
+      const drawL = Math.max(DIVIDER_X + 2, leftX);
+      const drawR = Math.min(W - 5, rightX);
+      if (drawR - drawL < 10) continue;
+
+      // Dashed horizontal line
+      svg.appendChild(createSVG("line", {
+        x1: drawL, y1: markerY, x2: drawR, y2: markerY,
+        stroke: "#c0c0c0", "stroke-width": 0.7, "stroke-dasharray": "3,3"
+      }));
+      // Ticks at ends (only if not clamped)
+      if (leftX >= DIVIDER_X) {
+        svg.appendChild(createSVG("line", {
+          x1: drawL, y1: markerY - 3, x2: drawL, y2: markerY + 3,
+          stroke: "#c0c0c0", "stroke-width": 0.5
+        }));
+      }
+      if (rightX <= W - 5) {
+        svg.appendChild(createSVG("line", {
+          x1: drawR, y1: markerY - 3, x2: drawR, y2: markerY + 3,
+          stroke: "#c0c0c0", "stroke-width": 0.5
+        }));
+      }
+
+      // Label under every axis
+      const midX = (drawL + drawR) / 2;
+      if (midX > DIVIDER_X + 20 && midX < W - 20) {
+        svg.appendChild(createText(midX, markerLabelY, "Inference delay", "#b0b0b0", 9, "middle"));
+      }
+    }
+
+    // ── Build visible dots ──
+    const minAi = Math.floor(executionBoundary - (DIVIDER_X + 80) / DOT_SPACING);
+    const maxAi = chunkStart + S + 8;
+    let dots = [];
+
+    for (let ai = minAi; ai <= maxAi; ai++) {
+      const sx = actionToScreenX(ai, scroll);
+      if (sx < -80 || sx > W + 80) continue;
+      const sy = trajectoryY(actionToWorldX(ai));
+      const cr = ai - chunkStart; // chunk-relative index
+
+      // Classify role
+      let role;
+      if (sx < DIVIDER_X || ai < executionBoundary) {
+        role = "history";
+      } else if (cr >= 0 && cr < D) {
+        role = "frozen";   // [0..2] dark green
+      } else if (cr >= D && cr < D + OVERLAP) {
+        role = "overlap";  // [3..8] light green → yellow
+      } else if (cr >= D + OVERLAP && cr < S) {
+        role = "fresh";    // [9..13] noise → yellow balls
+      } else {
+        role = "beyond";   // past chunk end
+      }
+
+      dots.push({ ai, sx, sy, role, cr });
+    }
+    dots.sort((a, b) => a.sx - b.sx);
+
+    // ── Per-dot visual state ──
+    // Returns { fill, stroke, radius, opacity, isNoise, noiseIntensity }
+    function dotVisual(d) {
+      const cr = d.cr;
+
+      // ── HISTORY ──
+      if (d.role === "history") {
+        const dist = Math.max(0, DIVIDER_X - d.sx);
+        const fade = Math.max(0.15, 1 - dist / 280);
+        return { type: "history", fade };
+      }
+
+      // ── BEYOND: always scattered noise ──
+      if (d.role === "beyond") {
+        return { type: "noise", intensity: 1.0 };
+      }
+
+      // ── FROZEN [0..2]: green → dark green during init; stay green; executed during inference ──
+      if (d.role === "frozen") {
+        // During init: carried-over green balls become dark green (committed)
+        if (phase === "init") {
+          return {
+            type: "ball",
+            fill: lerpRGB(COL_DARK_GREEN, COL_DARK_GREEN, initP),
+            stroke: lerpRGB(COL_DARK_GREEN_S, COL_DARK_GREEN_S, initP),
+            radius: 10 + initP,
+            usePattern: initP > 0.5 ? "gridGreenDark" : null,
+            patternOpacity: initP > 0.5 ? (initP - 0.5) / 0.5 : 0,
+          };
+        }
+        // During inference: still dark green (until scrolled past divider → history)
+        return {
+          type: "ball",
+          fill: COL_DARK_GREEN,
+          stroke: COL_DARK_GREEN_S,
+          radius: 11,
+          usePattern: "gridGreenDark",
+          patternOpacity: 1,
+        };
+      }
+
+      // ── OVERLAP [3..8]: green → light green during init; light green → green during inference ──
+      if (d.role === "overlap") {
+        if (phase === "init") {
+          // Carried-over green balls → light green (softened for overlap role)
+          return {
+            type: "ball",
+            fill: lerpRGB(COL_DARK_GREEN, COL_LIGHT_GREEN, initP),
+            stroke: lerpRGB(COL_DARK_GREEN_S, COL_LIGHT_GREEN_S, initP),
+            radius: 10,
+            usePattern: initP > 0.7 ? "gridGreenLight" : (initP < 0.3 ? "gridGreenDark" : null),
+            patternOpacity: initP > 0.7 ? (initP - 0.7) / 0.3 : (initP < 0.3 ? 1 - initP / 0.3 : 0),
+          };
+        }
+        if (phase === "infer") {
+          // Light green → green balls: spans the FULL inference phase
+          // Green = valid/resolved action
+          const pos = (cr - D) / Math.max(1, OVERLAP - 1); // 0..1
+          const headStart = pos * 0.08;
+          const localT = Math.min(1, (inferP + headStart) / (1 + headStart));
+          return {
+            type: "ball",
+            fill: lerpRGB(COL_LIGHT_GREEN, COL_DARK_GREEN, localT),
+            stroke: lerpRGB(COL_LIGHT_GREEN_S, COL_DARK_GREEN_S, localT),
+            radius: 10,
+            usePattern: localT > 0.7 ? "gridGreenDark" : (localT < 0.3 ? "gridGreenLight" : null),
+            patternOpacity: localT > 0.7 ? (localT - 0.7) / 0.3 : (localT < 0.3 ? 1 - localT / 0.3 : 0),
+          };
+        }
+        // exec phase: fully green (valid actions)
+        return {
+          type: "ball",
+          fill: COL_DARK_GREEN,
+          stroke: COL_DARK_GREEN_S,
+          radius: 10,
+          usePattern: "gridGreenDark",
+          patternOpacity: 1,
+        };
+      }
+
+      // ── FRESH [9..13]: these are NEW actions, always start as noise ──
+      if (d.role === "fresh") {
+        if (phase === "init") {
+          // Fresh actions are brand new — they start as noise, not yellow balls
+          return { type: "noise", intensity: 0.7 + initP * 0.3 };
+        }
+        if (phase === "infer") {
+          // Noise → green balls: spans the FULL inference phase
+          // Green = valid/resolved action
+          const pos = (cr - D - OVERLAP) / Math.max(1, FRESH - 1); // 0=closest, 1=farthest
+          const headStart = (1 - pos) * 0.08;
+          const localT = Math.min(1, (inferP + headStart) / (1 + headStart));
+          if (localT < 0.15) {
+            return { type: "noise", intensity: 1.0 - localT * 2 };
+          }
+          if (localT < 0.6) {
+            // Converging: noise + emerging green ball
+            const conv = (localT - 0.15) / 0.45;
+            return { type: "converging", convergence: conv };
+          }
+          // Resolved green ball
+          const settle = (localT - 0.6) / 0.4;
+          return {
+            type: "ball",
+            fill: lerpRGB(COL_LIGHT_GREEN, COL_DARK_GREEN, settle),
+            stroke: lerpRGB(COL_LIGHT_GREEN_S, COL_DARK_GREEN_S, settle),
+            radius: 9.5 + settle * 0.5,
+            opacity: 0.7 + settle * 0.3,
+            fadeParticles: 1 - settle,
+            usePattern: settle > 0.7 ? "gridGreenDark" : null,
+            patternOpacity: settle > 0.7 ? (settle - 0.7) / 0.3 : 0,
+          };
+        }
+        // exec phase: fully green (valid actions)
+        return {
+          type: "ball",
+          fill: COL_DARK_GREEN,
+          stroke: COL_DARK_GREEN_S,
+          radius: 10,
+          usePattern: "gridGreenDark",
+          patternOpacity: 1,
+        };
+      }
+
+      return { type: "ball", fill: COL_YELLOW, stroke: COL_YELLOW_S, radius: 10 };
+    }
+
+    // ── Draw connecting lines ──
+    for (let i = 0; i < dots.length - 1; i++) {
+      const a = dots[i], b = dots[i+1];
+      const va = dotVisual(a), vb = dotVisual(b);
+
+      // Skip lines involving pure noise or beyond
+      if (va.type === "noise" || vb.type === "noise") continue;
+      if (a.role === "beyond" || b.role === "beyond") continue;
+
+      let strokeColor, strokeWidth, opacity;
+      if (a.role === "history" && b.role === "history") {
+        strokeColor = "#c0c0c0"; strokeWidth = 1.5; opacity = 0.7;
+      } else if (a.role === "history" || b.role === "history") {
+        strokeColor = "#a8b8a0"; strokeWidth = 1.5; opacity = 0.6;
+      } else {
+        // Use average of the two dot fills
+        const af = va.fill || COL_YELLOW;
+        const bf = vb.fill || COL_YELLOW;
+        strokeColor = rgbStr(lerpRGB(af, bf, 0.5));
+        strokeWidth = 1.8;
+        opacity = Math.min(va.opacity || 1, vb.opacity || 1) * 0.85;
+        // Converging dots: reduce line opacity
+        if (va.type === "converging") opacity *= va.convergence;
+        if (vb.type === "converging") opacity *= vb.convergence;
+      }
+
+      svg.appendChild(createSVG("line", {
+        x1: a.sx, y1: a.sy, x2: b.sx, y2: b.sy,
+        stroke: strokeColor, "stroke-width": strokeWidth, opacity: Math.max(0, opacity)
+      }));
+    }
+
+    // ── Draw dots ──
+    for (const d of dots) {
+      const v = dotVisual(d);
+
+      if (v.type === "history") {
+        const radius = 9 * v.fade + 2;
+        svg.appendChild(createSVG("circle", {
+          cx: d.sx, cy: d.sy, r: radius,
+          fill: "url(#crosshatchGray)", stroke: "#b8b8b8", "stroke-width": 1,
+          opacity: v.fade
+        }));
+
+      } else if (v.type === "noise") {
+        // Scattered yellow particles
+        const particles = getScatter(d.ai);
+        const intensity = v.intensity != null ? v.intensity : 1;
+        for (const p of particles) {
+          const floatY = Math.sin(t * 1.5 + p.phase) * 6;
+          const floatX = Math.cos(t * 1.1 + p.phase * 0.7) * 4;
+          const px = d.sx + p.dx * intensity + floatX;
+          const py = d.sy + p.dy * intensity + floatY;
+          if (px < -20 || px > W + 20) continue;
+          svg.appendChild(createSVG("circle", {
+            cx: px, cy: py, r: p.size,
+            fill: "#e7c75f", opacity: 0.45
+          }));
+        }
+
+      } else if (v.type === "converging") {
+        // Particles converging + emerging green ball
+        const conv = v.convergence;
+        const particles = getScatter(d.ai);
+        const spread = 1.0 - conv * 0.75;
+        // Particles transition from yellow to green as they converge
+        const pColor = lerpRGB(COL_YELLOW, COL_LIGHT_GREEN, conv);
+        for (const p of particles) {
+          const floatY = Math.sin(t * 1.5 + p.phase) * (5 * (1 - conv * 0.5));
+          const floatX = Math.cos(t * 1.1 + p.phase * 0.7) * (4 * (1 - conv * 0.5));
+          const px = d.sx + p.dx * spread + floatX;
+          const py = d.sy + p.dy * spread + floatY;
+          if (px < -20 || px > W + 20) continue;
+          svg.appendChild(createSVG("circle", {
+            cx: px, cy: py, r: p.size * (1 - conv * 0.3),
+            fill: rgbStr(pColor), opacity: 0.4 + conv * 0.1
+          }));
+        }
+        // Emerging green ball
+        const ballColor = lerpRGB(COL_LIGHT_GREEN, COL_DARK_GREEN, conv * 0.5);
+        svg.appendChild(createSVG("circle", {
+          cx: d.sx, cy: d.sy, r: 5 + conv * 5,
+          fill: rgbStr(ballColor), stroke: rgbStr(COL_DARK_GREEN_S), "stroke-width": conv,
+          opacity: conv * 0.65
+        }));
+
+      } else if (v.type === "ball") {
+        const radius = v.radius || 10;
+        const opacity = v.opacity != null ? v.opacity : 1;
+
+        // Optional noise overlay (during init destabilization of fresh)
+        if (v.noiseOverlay && v.noiseOverlay > 0.1) {
+          const particles = getScatter(d.ai);
+          const spread = v.noiseOverlay * 0.5;
+          for (const p of particles) {
+            const floatY = Math.sin(t * 1.5 + p.phase) * 4 * v.noiseOverlay;
+            const px = d.sx + p.dx * spread;
+            const py = d.sy + p.dy * spread + floatY;
+            if (px < -20 || px > W + 20) continue;
+            svg.appendChild(createSVG("circle", {
+              cx: px, cy: py, r: p.size * 0.7,
+              fill: "#e7c75f", opacity: v.noiseOverlay * 0.3
+            }));
+          }
+        }
+
+        // Optional fading particles (settling after denoise)
+        if (v.fadeParticles && v.fadeParticles > 0.05) {
+          const particles = getScatter(d.ai);
+          const spread = 0.25 * v.fadeParticles;
+          for (const p of particles) {
+            const px = d.sx + p.dx * spread;
+            const py = d.sy + p.dy * spread;
+            if (px < -20 || px > W + 20) continue;
+            svg.appendChild(createSVG("circle", {
+              cx: px, cy: py, r: p.size * 0.5,
+              fill: "#e7c75f", opacity: v.fadeParticles * 0.2
+            }));
+          }
+        }
+
+        // Main ball
+        if (v.usePattern && v.patternOpacity > 0.01) {
+          // Solid color base
+          svg.appendChild(createSVG("circle", {
+            cx: d.sx, cy: d.sy, r: radius,
+            fill: rgbStr(v.fill), stroke: rgbStr(v.stroke), "stroke-width": 1.5,
+            opacity: opacity
+          }));
+          // Pattern overlay
+          svg.appendChild(createSVG("circle", {
+            cx: d.sx, cy: d.sy, r: radius,
+            fill: `url(#${v.usePattern})`, stroke: "none",
+            opacity: v.patternOpacity * opacity
+          }));
+        } else {
+          svg.appendChild(createSVG("circle", {
+            cx: d.sx, cy: d.sy, r: radius,
+            fill: rgbStr(v.fill), stroke: rgbStr(v.stroke), "stroke-width": 1.3,
+            opacity: opacity
+          }));
+        }
+      }
+    }
+  }
+
+  // ── SVG Helpers ──
+  function createSVG(tag, attrs) {
+    const el = document.createElementNS(SVG_NS, tag);
+    for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+    return el;
+  }
+
+  function createText(x, y, text, fill, fontSize, anchor) {
+    const el = document.createElementNS(SVG_NS, "text");
+    el.setAttribute("x", x); el.setAttribute("y", y);
+    el.setAttribute("fill", fill); el.setAttribute("font-size", fontSize);
+    el.setAttribute("text-anchor", anchor || "start");
+    el.setAttribute("font-family", "'Helvetica Neue', Arial, sans-serif");
+    el.setAttribute("font-style", "italic");
+    el.textContent = text;
+    return el;
+  }
+
+  // ── Animation Loop ──
+  let started = false;
+  function animate(timestamp) {
+    if (!started) { cycleStartTime = timestamp; started = true; }
+    render(timestamp);
+    requestAnimationFrame(animate);
+  }
+  requestAnimationFrame(animate);
+})();
+</script>
+</body>
+</html>

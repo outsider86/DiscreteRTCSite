@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Discrete RTC Action Chunk Generation</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #f7f7f5;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+  }
+  #container {
+    width: 1060px;
+    max-width: 98vw;
+    text-align: center;
+  }
+  svg { display: block; margin: 0 auto; }
+  .caption {
+    margin-top: 6px;
+    font-size: 10.5px;
+    color: #9a9a9a;
+    letter-spacing: 0.3px;
+  }
+</style>
+</head>
+<body>
+<div id="container">
+  <svg id="viz" viewBox="0 0 1060 290"></svg>
+  <div class="caption">Discrete RTC-style action chunk generation</div>
+</div>
+
+<script>
+(function() {
+  "use strict";
+  const SVG_NS = "http://www.w3.org/2000/svg";
+  const svg = document.getElementById("viz");
+  const W = 1060, H = 290;
+
+  // ── Deterministic schedule ──
+  // 4 timesteps x 14 actions x 4x4 binary matrices (flattened to 16-element arrays)
+  // 10-step schedule: continuous across cycle boundaries
+  // step0[5..8] == step9[10..13] for seamless carry-over (no abrupt changes)
+  // At step 9: actions 5-9 ALL 16/16 (next cycle's executable chunk)
+  const SCHEDULE = [
+    // step 0: [16,16,16,16,16, 10,6,2,0,0, 0,0,0,0]
+    [[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[0,1,1,0,1,1,1,1,1,1,1,1,0,0,0,0],[0,1,1,0,0,1,1,0,0,1,1,0,0,0,0,0],[0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],
+    // step 1: [16,16,16,16,16, 11,7,4,2,2, 1,1,0,0]
+    [[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[0,1,1,0,1,1,1,1,1,1,1,1,0,1,0,0],[0,1,1,0,1,1,1,0,0,1,1,0,0,0,0,0],[0,0,0,0,0,1,1,0,0,1,1,0,0,0,0,0],[0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],
+    // step 2: [16,16,16,16,16, 11,8,5,4,4, 2,1,0,0]
+    [[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[0,1,1,0,1,1,1,1,1,1,1,1,0,1,0,0],[0,1,1,0,1,1,1,1,0,1,1,0,0,0,0,0],[0,1,0,0,0,1,1,0,0,1,1,0,0,0,0,0],[0,0,0,0,0,1,1,0,0,1,1,0,0,0,0,0],[0,0,0,0,0,1,1,0,0,1,1,0,0,0,0,0],[0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],
+    // step 3: [16,16,16,16,16, 12,9,7,5,5, 3,2,1,0]
+    [[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0],[0,1,1,0,1,1,1,1,1,1,1,0,0,0,0,0],[0,1,1,0,1,1,1,0,0,1,1,0,0,0,0,0],[0,1,0,0,0,1,1,0,0,1,1,0,0,0,0,0],[0,1,0,0,0,1,1,0,0,1,1,0,0,0,0,0],[0,0,0,0,0,1,1,0,0,1,0,0,0,0,0,0],[0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],
+    // step 4: [16,16,16,16,16, 13,10,8,7,7, 4,3,1,0]
+    [[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0],[0,1,1,0,1,1,1,1,1,1,1,1,0,0,0,0],[0,1,1,0,1,1,1,1,0,1,1,0,0,0,0,0],[0,1,1,0,1,1,1,0,0,1,1,0,0,0,0,0],[0,1,1,0,1,1,1,0,0,1,1,0,0,0,0,0],[0,0,0,0,0,1,1,0,0,1,1,0,0,0,0,0],[0,0,0,0,0,1,1,0,0,1,0,0,0,0,0,0],[0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],
+    // step 5: [16,16,16,16,16, 13,12,10,9,9, 6,3,1,0]
+    [[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0],[0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0],[0,1,1,0,1,1,1,1,1,1,1,1,0,0,0,0],[0,1,1,0,1,1,1,1,1,1,1,0,0,0,0,0],[0,1,1,0,1,1,1,1,1,1,1,0,0,0,0,0],[0,1,1,0,0,1,1,0,0,1,1,0,0,0,0,0],[0,0,0,0,0,1,1,0,0,1,0,0,0,0,0,0],[0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],
+    // step 6: [16,16,16,16,16, 14,13,11,11,11, 7,4,1,0]
+    [[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,0],[1,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0],[0,1,1,0,1,1,1,1,1,1,1,1,0,1,0,0],[0,1,1,0,1,1,1,1,1,1,1,1,0,1,0,0],[0,1,1,0,1,1,1,1,1,1,1,1,0,1,0,0],[0,1,1,0,1,1,1,0,0,1,1,0,0,0,0,0],[0,0,0,0,0,1,1,0,0,1,1,0,0,0,0,0],[0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],
+    // step 7: [16,16,16,16,16, 15,14,13,12,12, 8,5,2,0]
+    [[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,0],[1,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0],[0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0],[0,1,1,0,1,1,1,1,1,1,1,1,0,1,1,0],[0,1,1,0,1,1,1,1,0,1,1,0,0,0,0,0],[0,1,0,0,0,1,1,0,0,1,1,0,0,0,0,0],[0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],
+    // step 8: [16,16,16,16,16, 15,15,14,14,14, 9,5,2,0]
+    [[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0],[1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,0],[1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,0],[1,1,1,1,1,1,1,1,1,1,1,1,0,1,1,0],[0,1,1,0,1,1,1,1,1,1,1,0,0,0,0,0],[0,1,0,0,0,1,1,0,0,1,1,0,0,0,0,0],[0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],
+    // step 9: [16,16,16,16,16, 16,16,16,16,16, 10,6,2,0] — actions 5-9 ALL 16/16!
+    [[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],[0,1,1,0,1,1,1,1,1,1,1,1,0,0,0,0],[0,1,1,0,0,1,1,0,0,1,1,0,0,0,0,0],[0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0]],
+  ];
+  const NUM_STEPS = 10;
+
+  // ── Precompute reveal orders for transitions between timesteps ──
+  // For each action and each timestep transition, compute the ordered list
+  // of cell indices that go from 0->1 (new reveals). We reveal them in
+  // center-outward order based on distance from grid center (1.5, 1.5).
+  function cellDistFromCenter(idx) {
+    const row = Math.floor(idx / 4);
+    const col = idx % 4;
+    return Math.sqrt((row - 1.5) * (row - 1.5) + (col - 1.5) * (col - 1.5));
+  }
+
+  // For a transition from matA to matB, return the indices that go 0->1,
+  // sorted by distance from center (closest first).
+  function computeNewCells(matA, matB) {
+    const newCells = [];
+    for (let i = 0; i < 16; i++) {
+      if (matA[i] === 0 && matB[i] === 1) {
+        newCells.push(i);
+      }
+    }
+    newCells.sort((a, b) => cellDistFromCenter(a) - cellDistFromCenter(b));
+    return newCells;
+  }
+
+  // Precompute transition reveal orders:
+  // transitionReveals[t][a] = array of cell indices that appear going from timestep t to t+1
+  const transitionReveals = [];
+  for (let t = 0; t < NUM_STEPS - 1; t++) {
+    const actions = [];
+    for (let a = 0; a < 14; a++) {
+      actions.push(computeNewCells(SCHEDULE[t][a], SCHEDULE[t + 1][a]));
+    }
+    transitionReveals.push(actions);
+  }
+
+  // ── Get interpolated cell visibility for a given action at continuous schedule time ──
+  // Returns a 16-element array of 0 or 1
+  function getInterpolatedMask(actionIdx, scheduleT) {
+    if (actionIdx < 0 || actionIdx >= 14) return new Array(16).fill(0);
+    const t = Math.max(0, Math.min(NUM_STEPS - 1, scheduleT));
+    const lo = Math.min(Math.floor(t), NUM_STEPS - 2);
+    const hi = Math.min(lo + 1, NUM_STEPS - 1);
+    const frac = t - lo;
+
+    const matLo = SCHEDULE[lo][actionIdx];
+    const matHi = SCHEDULE[hi][actionIdx];
+
+    if (lo === hi || frac <= 0) return matLo.slice();
+    if (frac >= 1) return matHi.slice();
+
+    // Start with the lower timestep mask
+    const result = matLo.slice();
+
+    // Reveal new cells progressively based on frac
+    const newCells = transitionReveals[lo][actionIdx];
+    const numToReveal = Math.floor(frac * newCells.length + 0.5);
+    for (let i = 0; i < numToReveal; i++) {
+      result[newCells[i]] = 1;
+    }
+
+    return result;
+  }
+
+  // ── RTC Parameters ──
+  const D = 3;            // inferenceDelay
+  const H_EXE = 5;       // executionHorizon
+  const S = 14;           // chunkSize
+
+  // ── Layout ──
+  const DIVIDER_X = 160;
+  const cellSize = 5;
+  const cellGap = 1.5;
+  const blockSize = cellSize * 4 + cellGap * 3; // 24.5
+  const BLOCK_SPACING = 48;
+  const TRAJ_Y_CENTER = 145;
+  const TRAJ_Y_AMP = 45;
+
+  // ── Timing ──
+  const CYCLE_DURATION = 4800;
+  const INFER_FRAC = D / H_EXE; // 0.6
+  const EXEC_FRAC = 1 - INFER_FRAC; // 0.4
+
+  // ── State ──
+  let cycleStartTime = 0;
+  let executionBoundary = 0;
+  let chunkCycle = 0;
+
+  // ── Per-action state: stores the frozen mask at the end of inference ──
+  // key: absolute action index, value: 16-element array
+  const frozenMasks = {};
+
+  // ── Color from unmask count ──
+  function unmaskColor(count) {
+    if (count <= 0) return [220, 220, 215];       // transparent/pale gray
+    if (count <= 4) return lerpRGB([250, 243, 210], [245, 230, 150], count / 4); // very light yellow
+    if (count <= 9) return lerpRGB([245, 230, 150], [210, 200, 80], (count - 5) / 4); // yellow
+    if (count <= 14) return lerpRGB([200, 195, 70], [140, 185, 80], (count - 10) / 4); // deep yellow to yellow-green
+    return lerpRGB([120, 180, 85], [85, 165, 85], (count - 15)); // pure green
+  }
+
+  // ── Trajectory ──
+  function trajectoryY(worldX) {
+    return TRAJ_Y_CENTER
+      + Math.sin(worldX * 0.0085) * TRAJ_Y_AMP * 0.7
+      + Math.sin(worldX * 0.014 + 1.2) * TRAJ_Y_AMP * 0.4
+      + Math.cos(worldX * 0.005 + 0.5) * TRAJ_Y_AMP * 0.25;
+  }
+
+  function actionToWorldX(ai) { return ai * BLOCK_SPACING; }
+  function actionToScreenX(ai, scroll) {
+    return DIVIDER_X + (ai - executionBoundary) * BLOCK_SPACING - scroll;
+  }
+
+  // ── Color helpers ──
+  function lerpRGB(c1, c2, t) {
+    t = Math.max(0, Math.min(1, t));
+    return [
+      Math.round(c1[0] + (c2[0] - c1[0]) * t),
+      Math.round(c1[1] + (c2[1] - c1[1]) * t),
+      Math.round(c1[2] + (c2[2] - c1[2]) * t),
+    ];
+  }
+  function rgbStr(c) { return `rgb(${c[0]},${c[1]},${c[2]})`; }
+
+  // ── Shimmer noise for beyond blocks ──
+  function shimmer(blockIdx, cellIdx, t) {
+    const phase = blockIdx * 3.7 + cellIdx * 1.3;
+    return 0.5 + 0.5 * Math.sin(t * 0.004 + phase)
+               * Math.sin(t * 0.0067 + phase * 0.7);
+  }
+
+  // ── SVG helpers ──
+  function createSVGEl(tag, attrs) {
+    const el = document.createElementNS(SVG_NS, tag);
+    for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+    return el;
+  }
+  function createText(x, y, text, fill, fontSize, anchor) {
+    const el = document.createElementNS(SVG_NS, "text");
+    el.setAttribute("x", x); el.setAttribute("y", y);
+    el.setAttribute("fill", fill); el.setAttribute("font-size", fontSize);
+    el.setAttribute("text-anchor", anchor || "start");
+    el.setAttribute("font-family", "'Helvetica Neue', Arial, sans-serif");
+    el.setAttribute("font-style", "italic");
+    el.textContent = text;
+    return el;
+  }
+
+  // ── Pre-create block group pool ──
+  const MAX_BLOCKS = 40;
+  const blockPool = [];
+  const poolContainer = createSVGEl("g", {});
+  svg.appendChild(poolContainer);
+  for (let i = 0; i < MAX_BLOCKS; i++) {
+    const g = document.createElementNS(SVG_NS, "g");
+    const rects = [];
+    for (let r = 0; r < 16; r++) {
+      const rect = document.createElementNS(SVG_NS, "rect");
+      rect.setAttribute("rx", "1.0");
+      rect.setAttribute("ry", "1.0");
+      rects.push(rect);
+      g.appendChild(rect);
+    }
+    g.style.display = "none";
+    poolContainer.appendChild(g);
+    blockPool.push({ g, rects });
+  }
+
+  // ── Render a 4x4 block given a cell mask ──
+  function renderBlock(poolIdx, cx, cy, mask, isHistory, historyFade) {
+    const bg = blockPool[poolIdx];
+    bg.g.style.display = "";
+    const halfBlock = blockSize / 2;
+    const count = mask.reduce((s, v) => s + v, 0);
+    const fillColor = isHistory ? [190, 190, 185] : unmaskColor(count);
+
+    for (let idx = 0; idx < 16; idx++) {
+      const row = Math.floor(idx / 4);
+      const col = idx % 4;
+      const rx = cx - halfBlock + col * (cellSize + cellGap);
+      const ry = cy - halfBlock + row * (cellSize + cellGap);
+      const rect = bg.rects[idx];
+      rect.setAttribute("x", rx);
+      rect.setAttribute("y", ry);
+      rect.setAttribute("width", cellSize);
+      rect.setAttribute("height", cellSize);
+
+      if (isHistory) {
+        const opacity = (mask[idx] ? 0.6 : 0.15) * historyFade;
+        rect.setAttribute("fill", rgbStr([190, 190, 185]));
+        rect.setAttribute("opacity", Math.max(0, Math.min(1, opacity)));
+      } else if (mask[idx]) {
+        rect.setAttribute("fill", rgbStr(fillColor));
+        rect.setAttribute("opacity", 0.85);
+      } else {
+        rect.setAttribute("fill", rgbStr([210, 210, 205]));
+        rect.setAttribute("opacity", 0.10);
+      }
+    }
+  }
+
+  // ── Render a beyond/shimmer block ──
+  function renderBeyondBlock(poolIdx, cx, cy, ai, now) {
+    const bg = blockPool[poolIdx];
+    bg.g.style.display = "";
+    const halfBlock = blockSize / 2;
+
+    for (let idx = 0; idx < 16; idx++) {
+      const row = Math.floor(idx / 4);
+      const col = idx % 4;
+      const rx = cx - halfBlock + col * (cellSize + cellGap);
+      const ry = cy - halfBlock + row * (cellSize + cellGap);
+      const rect = bg.rects[idx];
+      rect.setAttribute("x", rx);
+      rect.setAttribute("y", ry);
+      rect.setAttribute("width", cellSize);
+      rect.setAttribute("height", cellSize);
+
+      const shim = shimmer(ai, idx, now);
+      rect.setAttribute("fill", rgbStr([215, 212, 200]));
+      rect.setAttribute("opacity", (0.06 + shim * 0.06).toFixed(3));
+    }
+  }
+
+  // ── Get the current mask for an absolute action index ──
+  function getCurrentMask(ai, chunkStart, phase, inferP) {
+    const cr = ai - chunkStart; // chunk-relative index (0..13)
+
+    // If this action has a frozen mask from the end of the previous cycle
+    // AND it's in the carryover range (indices 0-8 of new chunk = indices 5-13 of old chunk),
+    // we use that as the base. But the schedule already accounts for this via timestep 0.
+
+    if (cr < 0 || cr >= S) {
+      // Beyond chunk: all masked
+      return new Array(16).fill(0);
+    }
+
+    // Map cycleT (0->1, covering all 5 executed actions) to schedule
+    // The schedule covers the full cycle length of 5 actions
+    const scheduleT = Math.min(NUM_STEPS - 1, ((phase === "exec") ? inferP : inferP) * (NUM_STEPS - 1));
+
+    // During exec phase, freeze at the final schedule step
+    if (phase === "exec") {
+      return SCHEDULE[NUM_STEPS - 1][cr].slice();
+    }
+
+    // During inference: interpolate schedule
+    return getInterpolatedMask(cr, scheduleT);
+  }
+
+  // ── Main render ──
+  function render(timestamp) {
+    const now = timestamp;
+    const cycleElapsed = timestamp - cycleStartTime;
+    let cycleT = cycleElapsed / CYCLE_DURATION;
+
+    if (cycleT >= 1.0) {
+      // Cycle boundary
+      executionBoundary += H_EXE;
+      chunkCycle++;
+      cycleStartTime = timestamp;
+      cycleT = 0;
+
+      // Clean old frozen masks
+      for (const key in frozenMasks) {
+        if (parseInt(key) < executionBoundary - 20) delete frozenMasks[key];
+      }
+    }
+
+    // ── Determine phase and local progress ──
+    let phase, phaseT, inferP;
+    if (cycleT < INFER_FRAC) {
+      phase = "infer";
+      phaseT = cycleT / INFER_FRAC; // 0->1
+      inferP = phaseT;
+    } else {
+      phase = "exec";
+      phaseT = (cycleT - INFER_FRAC) / EXEC_FRAC; // 0->1
+      inferP = 1.0; // inference complete
+    }
+
+    // ── Scroll ──
+    // Purely constant speed — no pause between cycles
+    const scroll = cycleT * H_EXE * BLOCK_SPACING;
+
+    // ── Clear SVG (keep pool container) ──
+    while (svg.firstChild && svg.firstChild !== poolContainer) {
+      svg.removeChild(svg.firstChild);
+    }
+    while (svg.lastChild && svg.lastChild !== poolContainer) {
+      svg.removeChild(svg.lastChild);
+    }
+
+    const insertBefore = poolContainer;
+    const chunkStart = executionBoundary;
+
+    // ── Background ──
+    svg.insertBefore(createSVGEl("rect", {
+      x: 0, y: 0, width: W, height: H, fill: "#ffffff"
+    }), insertBefore);
+    svg.insertBefore(createSVGEl("rect", {
+      x: 0, y: 0, width: DIVIDER_X, height: H, fill: "#f0f0ec", opacity: 0.6
+    }), insertBefore);
+
+    // ── Divider ──
+    svg.insertBefore(createSVGEl("line", {
+      x1: DIVIDER_X, y1: 30, x2: DIVIDER_X, y2: H - 50,
+      stroke: "#8f8f8f", "stroke-width": 1.5
+    }), insertBefore);
+    svg.insertBefore(createText(DIVIDER_X, H - 38, "Current time", "#8f8f8f", 11, "middle"), insertBefore);
+
+    // ── Section labels ──
+    // Frozen: actions 0..(D-1), Updated: D..(S-6), New: (S-5)..(S-1)
+    // Using chunk-relative positions
+    const frozenStartSX = Math.max(DIVIDER_X + 5, actionToScreenX(chunkStart, scroll));
+    const frozenEndSX = actionToScreenX(chunkStart + D, scroll);
+    const updatedEndSX = actionToScreenX(chunkStart + S - 5, scroll);
+    const freshEndSX = actionToScreenX(chunkStart + S, scroll);
+
+    const frozenMidX = (frozenStartSX + frozenEndSX) / 2;
+    const updatedMidX = (frozenEndSX + updatedEndSX) / 2;
+    const freshMidX = (updatedEndSX + freshEndSX) / 2;
+
+    if (frozenMidX > DIVIDER_X && frozenMidX < W)
+      svg.insertBefore(createText(frozenMidX, 28, "Frozen actions", "#9a9a9a", 11, "middle"), insertBefore);
+    if (updatedMidX > DIVIDER_X && updatedMidX < W)
+      svg.insertBefore(createText(updatedMidX, 28, "Updated actions", "#9a9a9a", 11, "middle"), insertBefore);
+    if (freshMidX > DIVIDER_X && freshMidX < W)
+      svg.insertBefore(createText(freshMidX, 28, "New actions", "#9a9a9a", 11, "middle"), insertBefore);
+
+    // ── Dashed separators between sections ──
+    [frozenEndSX, updatedEndSX, freshEndSX].forEach(function(x) {
+      if (x > DIVIDER_X && x < W)
+        svg.insertBefore(createSVGEl("line", {
+          x1: x, y1: 40, x2: x, y2: H - 42,
+          stroke: "#c8c8c8", "stroke-width": 0.8, "stroke-dasharray": "4,3"
+        }), insertBefore);
+    });
+
+    // ── Dashed delay axes ──
+    const markerY = H - 40;
+    const markerLabelY = H - 20;
+    const firstAxisAi = Math.floor((executionBoundary - 5) / H_EXE) * H_EXE;
+    for (let axisStart = firstAxisAi; axisStart < executionBoundary + S + 15; axisStart += H_EXE) {
+      const axisEnd = axisStart + D;
+      const leftX = actionToScreenX(axisStart, scroll);
+      const rightX = actionToScreenX(axisEnd, scroll);
+      if (rightX < DIVIDER_X) continue;
+      if (leftX > W + 20) continue;
+      const drawL = Math.max(DIVIDER_X + 2, leftX);
+      const drawR = Math.min(W - 5, rightX);
+      if (drawR - drawL < 10) continue;
+
+      svg.insertBefore(createSVGEl("line", {
+        x1: drawL, y1: markerY, x2: drawR, y2: markerY,
+        stroke: "#c0c0c0", "stroke-width": 0.7, "stroke-dasharray": "3,3"
+      }), insertBefore);
+      if (leftX >= DIVIDER_X) {
+        svg.insertBefore(createSVGEl("line", {
+          x1: drawL, y1: markerY - 3, x2: drawL, y2: markerY + 3,
+          stroke: "#c0c0c0", "stroke-width": 0.5
+        }), insertBefore);
+      }
+      if (rightX <= W - 5) {
+        svg.insertBefore(createSVGEl("line", {
+          x1: drawR, y1: markerY - 3, x2: drawR, y2: markerY + 3,
+          stroke: "#c0c0c0", "stroke-width": 0.5
+        }), insertBefore);
+      }
+      const midX = (drawL + drawR) / 2;
+      if (midX > DIVIDER_X + 20 && midX < W - 20) {
+        svg.insertBefore(createText(midX, markerLabelY, "Inference delay", "#b0b0b0", 9, "middle"), insertBefore);
+      }
+    }
+
+    // ── Collect block data ──
+    const minAi = Math.floor(executionBoundary - (DIVIDER_X + 80) / BLOCK_SPACING);
+    const maxAi = chunkStart + S + 8;
+    const blocks = [];
+
+    for (let ai = minAi; ai <= maxAi; ai++) {
+      const sx = actionToScreenX(ai, scroll);
+      if (sx < -30 || sx > W + 30) continue;
+      const sy = trajectoryY(actionToWorldX(ai));
+      const cr = ai - chunkStart;
+
+      let role, mask, fade = 1, color;
+      if (sx < DIVIDER_X || ai < executionBoundary) {
+        role = "history";
+        mask = new Array(16).fill(1);
+        const dist = Math.max(0, DIVIDER_X - sx);
+        fade = Math.max(0.15, 1 - dist / 280);
+        color = [190, 190, 185];
+      } else if (cr >= 0 && cr < S) {
+        role = "active";
+        mask = getCurrentMask(ai, chunkStart, phase, inferP);
+        const count = mask.reduce((s, v) => s + v, 0);
+        color = unmaskColor(count);
+      } else {
+        role = "beyond";
+        mask = null;
+        color = [215, 212, 200];
+      }
+
+      const maskCount = mask ? mask.reduce((s, v) => s + v, 0) : 0;
+      blocks.push({ ai, sx, sy, cr, role, mask, fade, color, maskCount });
+    }
+    blocks.sort((a, b) => a.sx - b.sx);
+
+    // ── Draw connecting lines between adjacent blocks ──
+    // Alpha schedule: maps mask count (0..16) to line opacity (0..1)
+    // Low counts → nearly invisible; ramps up smoothly to solid
+    function lineAlpha(maskCount) {
+      const t = maskCount / 16; // 0..1
+      // Cubic ease-in: stays very transparent early, ramps up late
+      return t * t * (3 - 2 * t); // smoothstep
+    }
+
+    for (let i = 0; i < blocks.length - 1; i++) {
+      const a = blocks[i], b = blocks[i + 1];
+
+      // Skip lines involving beyond blocks
+      if (a.role === "beyond" || b.role === "beyond") continue;
+
+      // Use minimum mask count of the pair for alpha
+      const minCount = Math.min(a.maskCount, b.maskCount);
+      const alpha = lineAlpha(minCount);
+
+      // Skip drawing nearly invisible lines
+      if (alpha < 0.02) continue;
+
+      let strokeColor, strokeWidth, opacity;
+      if (a.role === "history" && b.role === "history") {
+        strokeColor = "#c0c0c0"; strokeWidth = 1.5; opacity = 0.7;
+      } else if (a.role === "history" || b.role === "history") {
+        // Transition from history gray to the active block's color
+        const activeBlock = a.role === "active" ? a : b;
+        const histBlock = a.role === "history" ? a : b;
+        strokeColor = rgbStr(lerpRGB([190, 190, 185], activeBlock.color, alpha));
+        strokeWidth = 1.5;
+        opacity = 0.6 * alpha;
+      } else {
+        // Both active: blend colors, alpha from mask fill
+        strokeColor = rgbStr(lerpRGB(a.color, b.color, 0.5));
+        strokeWidth = 1.8;
+        opacity = 0.85 * alpha;
+      }
+
+      // Fade with history distance
+      if (a.role === "history") opacity *= a.fade;
+      if (b.role === "history") opacity *= b.fade;
+
+      svg.insertBefore(createSVGEl("line", {
+        x1: a.sx, y1: a.sy, x2: b.sx, y2: b.sy,
+        stroke: strokeColor, "stroke-width": strokeWidth, opacity: Math.max(0, opacity)
+      }), insertBefore);
+    }
+
+    // ── Render blocks ──
+    let poolIdx = 0;
+
+    for (const d of blocks) {
+      if (poolIdx >= MAX_BLOCKS) break;
+
+      if (d.role === "history") {
+        renderBlock(poolIdx, d.sx, d.sy, d.mask, true, d.fade);
+        poolIdx++;
+      } else if (d.role === "active") {
+        renderBlock(poolIdx, d.sx, d.sy, d.mask, false, 1);
+        poolIdx++;
+      } else {
+        renderBeyondBlock(poolIdx, d.sx, d.sy, d.ai, now);
+        poolIdx++;
+      }
+    }
+
+    // Hide unused pool groups
+    for (let j = poolIdx; j < MAX_BLOCKS; j++) {
+      blockPool[j].g.style.display = "none";
+    }
+  }
+
+  // ── Animation loop ──
+  let started = false;
+  function animate(timestamp) {
+    if (!started) {
+      cycleStartTime = timestamp;
+      started = true;
+    }
+    render(timestamp);
+    requestAnimationFrame(animate);
+  }
+  requestAnimationFrame(animate);
+})();
+</script>
+</body>
+</html>

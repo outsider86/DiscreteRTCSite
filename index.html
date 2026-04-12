@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="description"
+        content="Discrete Diffusion Policies are Natural Asynchronous Executors for real-time robot control.">
+  <meta name="keywords" content="Discrete Diffusion, Real-Time Control, Asynchronous Execution, Robot Learning">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>DiscreteRTC: Discrete Diffusion Policies are Natural Asynchronous Executors</title>
+
+  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro"
+        rel="stylesheet">
+
+  <link rel="stylesheet" href="./static/css/bulma.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-carousel.min.css">
+  <link rel="stylesheet" href="./static/css/bulma-slider.min.css">
+  <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
+  <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  <link rel="stylesheet" href="./static/css/index.css">
+  <link rel="icon" href="./static/images/favicon.svg">
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script defer src="./static/js/fontawesome.all.min.js"></script>
+  <script src="./static/js/bulma-carousel.min.js"></script>
+  <script src="./static/js/bulma-slider.min.js"></script>
+
+  <style>
+    .viz-iframe {
+      width: 100%;
+      height: 320px;
+      border: none;
+      background: transparent;
+    }
+    .viz-container {
+      background: transparent;
+      padding: 0;
+      overflow: hidden;
+    }
+    .viz-label {
+      text-align: center;
+      font-family: 'Google Sans', sans-serif;
+      font-size: 0.95rem;
+      color: #666;
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+    .figure-img {
+      border-radius: 8px;
+    }
+    .key-point {
+      background: #f5f5f5;
+      border-radius: 8px;
+      padding: 1.2rem 1.5rem;
+      margin-bottom: 1rem;
+    }
+    .key-point strong {
+      color: #363636;
+    }
+    .placeholder-box {
+      background: #f9f9f9;
+      border: 2px dashed #d0d0d0;
+      border-radius: 12px;
+      padding: 3rem 2rem;
+      text-align: center;
+      color: #aaa;
+      font-family: 'Google Sans', sans-serif;
+    }
+    .placeholder-box .placeholder-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      color: #ccc;
+    }
+    .placeholder-box .placeholder-text {
+      font-size: 1.1rem;
+      font-weight: 500;
+    }
+    .placeholder-box .placeholder-sub {
+      font-size: 0.9rem;
+      margin-top: 0.5rem;
+      color: #bbb;
+    }
+    .section-number {
+      color: #aaa;
+      font-weight: 400;
+    }
+  </style>
+</head>
+<body>
+
+<nav class="navbar" role="navigation" aria-label="main navigation">
+  <div class="navbar-brand">
+    <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false">
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+      <span aria-hidden="true"></span>
+    </a>
+  </div>
+</nav>
+
+
+<!-- ============================================================ -->
+<!-- Hero / Title -->
+<!-- ============================================================ -->
+<section class="hero">
+  <div class="hero-body">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered">
+        <div class="column has-text-centered">
+          <h1 class="title is-1 publication-title">Discrete Diffusion Policies<br>are Natural Asynchronous Executors</h1>
+          <div class="is-size-5 publication-authors">
+            <span class="author-block">Anonymous Author(s)</span>
+          </div>
+
+          <div class="is-size-5 publication-authors">
+            <span class="author-block">Submitted to CoRL 2026</span>
+          </div>
+
+          <div class="column has-text-centered">
+            <div class="publication-links">
+              <!-- PDF Link. -->
+              <span class="link-block">
+                <a href="./static/paper.pdf"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="fas fa-file-pdf"></i>
+                  </span>
+                  <span>Paper</span>
+                </a>
+              </span>
+              <!-- arXiv Link (placeholder). -->
+              <span class="link-block">
+                <a href="#"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="ai ai-arxiv"></i>
+                  </span>
+                  <span>arXiv (coming soon)</span>
+                </a>
+              </span>
+              <!-- Code Link (placeholder). -->
+              <span class="link-block">
+                <a href="#"
+                   class="external-link button is-normal is-rounded is-dark">
+                  <span class="icon">
+                      <i class="fab fa-github"></i>
+                  </span>
+                  <span>Code (coming soon)</span>
+                </a>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ============================================================ -->
+<!-- Teaser: Main Demo -->
+<!-- ============================================================ -->
+<section class="hero teaser">
+  <div class="container is-max-desktop">
+    <div class="hero-body">
+      <div class="placeholder-box">
+        <div class="placeholder-icon"><i class="fas fa-robot"></i></div>
+        <div class="placeholder-text">Main Demo Video Coming Soon</div>
+        <div class="placeholder-sub">Real-world robot demonstrations of DiscreteRTC in action</div>
+      </div>
+      <h2 class="subtitle has-text-centered" style="margin-top: 1.5rem;">
+        <strong>DiscreteRTC</strong> leverages the native inpainting capability of discrete diffusion
+        for asynchronous real-time robot control &mdash; no gradient-based guidance, no heuristic weights,
+        no extra inference cost.
+      </h2>
+    </div>
+  </div>
+</section>
+
+
+<!-- ============================================================ -->
+<!-- Abstract -->
+<!-- ============================================================ -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Abstract</h2>
+        <div class="content has-text-justified">
+          <p>
+            Deploying high-latency generative policies in real-time robot control requires
+            asynchronous execution, where the next action chunk is inferred while the current one
+            is being executed. Real-time chunking (RTC) achieves this for continuous diffusion and
+            flow-matching policies via gradient-based inpainting, but suffers from five key limitations:
+            inability to leverage pre-training, need for inpainting-specific fine-tuning, reliance on
+            heuristic guidance weights, extra inference-time computation from backpropagation, and a
+            distribution mismatch between inpainting conditions at inference versus training.
+          </p>
+          <p>
+            We observe that discrete diffusion policies &mdash; which generate actions by iteratively
+            unmasking tokens &mdash; are <em>natural asynchronous executors</em>: inpainting is their
+            native operation, eliminating the first four limitations without any architectural or
+            algorithmic modification. To address the remaining distribution mismatch, we propose a
+            fine-tuning recipe that exposes the model to its own predictions as conditioning context
+            during training.
+          </p>
+          <p>
+            Experiments on simulated dynamic control benchmarks demonstrate that
+            <strong>DiscreteRTC</strong> outperforms continuous RTC and other asynchronous baselines
+            in both success rate and throughput, while being simpler and computationally cheaper.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ============================================================ -->
+<!-- Sec 3. Flow-Matching is Not Suitable for RTC -->
+<!-- ============================================================ -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered">
+      <div class="column is-full-width">
+        <h2 class="title is-3">Flow-Matching is Not Suitable for RTC</h2>
+
+        <!-- Interactive Continuous RTC Visualization -->
+        <div class="columns is-centered" style="margin-bottom: 2rem;">
+          <div class="column is-12">
+            <div class="viz-container">
+              <div class="viz-label">Interactive Visualization: Continuous RTC (Flow-Matching)</div>
+              <iframe class="viz-iframe" src="./static/visualizations/continuousRTC.html"></iframe>
+            </div>
+          </div>
+        </div>
+
+        <div class="content has-text-justified">
+          <p>
+            Flow-matching policies require gradient-based inpainting (&#928;GDM) for asynchronous
+            execution, which introduces fundamental limitations. During pre-training, all actions
+            within a chunk are corrupted at the same noise level and denoised together &mdash; but
+            RTC requires generating from mixed-noise chunks, a pattern the model has never seen.
+            This mismatch necessitates inpainting-specific fine-tuning, heuristic guidance weight
+            design, and expensive gradient computation at every denoising step.
+          </p>
+        </div>
+
+        <!-- Key limitations header -->
+        <h3 class="title is-4">Key Limitations</h3>
+
+        <!-- Figure 1: Continuous RTC diagram -->
+        <div class="columns is-centered" style="margin-bottom: 1.5rem;">
+          <div class="column is-11">
+            <figure class="image">
+              <img src="./static/figures/continuousRTC.png" alt="Limitations of continuous RTC with flow-matching head" class="figure-img">
+              <figcaption class="has-text-centered" style="margin-top: 0.5rem; color: #888; font-size: 0.9rem;">
+                <strong>Figure 1:</strong> RTC with a flow-matching head is ill-suited because
+                (a) pre-training does not include inpainting, (b) fine-tuning is required,
+                (c) heuristic guidance weights must be hand-designed, and (d) gradient-based guidance adds 2.5x inference cost.
+              </figcaption>
+            </figure>
+          </div>
+        </div>
+
+        <!-- Key limitation items -->
+        <div>
+          <div class="key-point">
+            <strong>(a) No Pre-training Benefit.</strong>
+            The continuous policy is not pre-trained for inpainting; the guidance mechanism is imposed at inference
+            and is foreign to the learned distribution. Scaling up data or model capacity does not improve inpainting.
+          </div>
+          <div class="key-point">
+            <strong>(b) Inpainting-specific Fine-tuning Required.</strong>
+            Achieving strong inpainting performance requires additional fine-tuning with explicit inpainting objectives,
+            adding training complexity and risking interference with base generation quality.
+          </div>
+          <div class="key-point">
+            <strong>(c) Heuristic Guidance Weights.</strong>
+            The soft-masking schedule and gradient clipping threshold are hand-designed hyperparameters that require
+            task-specific tuning and must be revisited whenever the model, task, or hardware changes.
+          </div>
+          <div class="key-point">
+            <strong>(d) Extra Inference Cost.</strong>
+            Gradient-based guidance requires backpropagation at every denoising step, roughly doubling compute (2.5x)
+            &mdash; directly counteracting the latency reduction that asynchronous execution is meant to provide.
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ============================================================ -->
+<!-- Sec 4. Discrete Diffusion Policies are Natural Async Executors -->
+<!-- ============================================================ -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered">
+      <div class="column is-full-width">
+        <h2 class="title is-3">Discrete Diffusion Policies are Natural Asynchronous Executors</h2>
+
+        <!-- Interactive Discrete RTC Visualization -->
+        <div class="columns is-centered" style="margin-bottom: 2rem;">
+          <div class="column is-12">
+            <div class="viz-container">
+              <div class="viz-label">Interactive Visualization: Discrete RTC (Ours)</div>
+              <iframe class="viz-iframe" src="./static/visualizations/discreteRTC.html"></iframe>
+            </div>
+          </div>
+        </div>
+
+        <div class="content has-text-justified">
+          <p>
+            In discrete diffusion, inpainting is structurally identical to standard masked generation:
+            given a partially masked token sequence, the model predicts and unmasks the missing tokens.
+            No architectural modification, no additional loss term, and no inference-time guidance are
+            needed. The model generates conditioned on unmasked tokens exactly as it was trained.
+          </p>
+        </div>
+
+        <!-- Key advantages header -->
+        <h3 class="title is-4">Key Advantages</h3>
+
+        <!-- Figure 2: Discrete RTC diagram -->
+        <div class="columns is-centered" style="margin-bottom: 1.5rem;">
+          <div class="column is-11">
+            <figure class="image">
+              <img src="./static/figures/discreteRTC.png" alt="Advantages of discrete RTC" class="figure-img">
+              <figcaption class="has-text-centered" style="margin-top: 0.5rem; color: #888; font-size: 0.9rem;">
+                <strong>Figure 2:</strong> RTC with a discrete diffusion head naturally resolves all limitations:
+                (a) inpainting <em>is</em> pre-training, (b) no fine-tuning needed,
+                (c) natural guidance via partial unmasking, and (d) 0.4x inference cost.
+              </figcaption>
+            </figure>
+          </div>
+        </div>
+
+        <!-- Key advantage items -->
+        <div>
+          <div class="key-point">
+            <strong>(a) Pre-training = Inpainting.</strong>
+            Generating conditioned on known tokens is identical to standard masked generation.
+            Pre-training directly improves inpainting quality &mdash; larger models and more data yield better generation.
+          </div>
+          <div class="key-point">
+            <strong>(b) No Fine-tuning Required.</strong>
+            Since inpainting is the native operation, the model can be deployed for asynchronous execution
+            immediately after pre-training.
+          </div>
+          <div class="key-point">
+            <strong>(c) Natural Guidance Scale.</strong>
+            Early stopping from previous inference leaves partially unmasked tokens as a natural, adaptive guidance
+            signal &mdash; replacing heuristic soft-masking schedules.
+          </div>
+          <div class="key-point">
+            <strong>(d) Lower Inference Cost.</strong>
+            Unmasking starts from an intermediate state and ends early, reducing total steps to ~s/H of the original.
+            DiscreteRTC uses ~0.4x inference cost vs. 2.5x for continuous RTC.
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ============================================================ -->
+<!-- Sec 5. Experiments -->
+<!-- ============================================================ -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered">
+      <div class="column is-full-width">
+        <h2 class="title is-3">Experiments</h2>
+
+        <!-- ── 5.1 Simulated Benchmark ── -->
+        <h3 class="title is-4">Simulated Benchmark: Kinetix</h3>
+
+        <div class="content has-text-justified">
+          <p>
+            We evaluate DiscreteRTC on <strong>Kinetix</strong>, a simulated benchmark of dynamic
+            tasks with force-based control (throwing, catching, balancing), where inference delay
+            necessitates asynchronous execution. All methods use the same training setup and network
+            size for fair comparison, with 512-bin quantization for discrete action tokenization.
+          </p>
+        </div>
+
+        <!-- Figure 3: Main results -->
+        <div class="columns is-centered" style="margin-bottom: 1.5rem;">
+          <div class="column is-12">
+            <figure class="image">
+              <img src="./static/figures/kinetix_main.png" alt="Main experimental results in Kinetix" class="figure-img">
+              <figcaption class="has-text-centered" style="margin-top: 0.5rem; color: #888; font-size: 0.9rem;">
+                <strong>Figure 3:</strong> Average solve rate and throughputs across all Kinetix environments
+                with different inference delays. DiscreteRTC consistently outperforms ContinuousRTC
+                and other baselines on both metrics. Each datapoint represents 2048 trials.
+              </figcaption>
+            </figure>
+          </div>
+        </div>
+
+        <div class="content has-text-justified">
+          <p>
+            Across all inference delays, DiscreteRTC consistently outperforms ContinuousRTC and other
+            variants on both solve rates and throughputs, showing the great advantages of the native
+            inpainting capability in discrete diffusion policies. Moreover, DiscreteRTC requires fewer
+            iterative steps than ContinuousRTC, especially under large delays with execution horizon.
+          </p>
+        </div>
+
+        <!-- Figures 4 & 5 -->
+        <div class="columns is-centered" style="margin-bottom: 1.5rem;">
+          <div class="column has-text-centered">
+            <figure class="image" style="display: inline-block;">
+              <img src="./static/figures/kinetix_steps.png" alt="Required iterative steps comparison" class="figure-img">
+              <figcaption class="has-text-centered" style="margin-top: 0.5rem; color: #888; font-size: 0.9rem;">
+                <strong>Figure 4:</strong> Required iterative steps of different policy
+                architectures in Kinetix with s = max(1, d).
+              </figcaption>
+            </figure>
+          </div>
+          <div class="column has-text-centered">
+            <figure class="image" style="display: inline-block;">
+              <img src="./static/figures/kinetix_ablation.png" alt="Extended baselines and ablation results" class="figure-img">
+              <figcaption class="has-text-centered" style="margin-top: 0.5rem; color: #888; font-size: 0.9rem;">
+                <strong>Figure 5:</strong> Experimental results of extended baselines
+                in Kinetix with s = max(1, d).
+              </figcaption>
+            </figure>
+          </div>
+        </div>
+
+        <div class="content has-text-justified">
+          <p>
+            Figure 5 presents the results of extended variants:
+          </p>
+          <ul>
+            <li><strong>vs. Training-time Continuous RTC:</strong> DiscreteRTC outperforms even the
+              fine-tuned continuous variant, further demonstrating the strong performance of the
+              fine-tuning free DiscreteRTC.</li>
+            <li><strong>DiscreteRTC + Fixed Steps:</strong> By using fixed unmasking steps during inference,
+              this variant achieves better performance by generating more fine-grained actions with the
+              same computation budget.</li>
+            <li><strong>DiscreteVLASH:</strong> Integrating with VLASH yields more stable performance
+              across varying delays, demonstrating that DiscreteRTC can be seamlessly combined with
+              advanced inference-time methods for further gains.</li>
+          </ul>
+        </div>
+
+        <!-- ── Real-World Results ── -->
+        <h3 class="title is-4" style="margin-top: 2.5rem;">Real-World Results</h3>
+
+        <div class="content has-text-justified">
+          <p>
+            We validate DiscreteRTC on real-world robotic manipulation tasks to demonstrate
+            its practical effectiveness under real inference latency conditions.
+          </p>
+        </div>
+
+        <!-- Real-world results placeholder -->
+        <div class="placeholder-box" style="margin-bottom: 1.5rem;">
+          <div class="placeholder-icon"><i class="fas fa-flask"></i></div>
+          <div class="placeholder-text">Real-World Experiment Results Coming Soon</div>
+          <div class="placeholder-sub">Setup, task descriptions, baselines, and quantitative results will be added here</div>
+        </div>
+
+        <div class="columns is-centered">
+          <div class="column is-4">
+            <div class="placeholder-box">
+              <div class="placeholder-icon"><i class="fas fa-video"></i></div>
+              <div class="placeholder-text">Task Video 1</div>
+            </div>
+          </div>
+          <div class="column is-4">
+            <div class="placeholder-box">
+              <div class="placeholder-icon"><i class="fas fa-video"></i></div>
+              <div class="placeholder-text">Task Video 2</div>
+            </div>
+          </div>
+          <div class="column is-4">
+            <div class="placeholder-box">
+              <div class="placeholder-icon"><i class="fas fa-video"></i></div>
+              <div class="placeholder-text">Task Video 3</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ============================================================ -->
+<!-- Sec 7. Discussion -->
+<!-- ============================================================ -->
+<section class="section">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered">
+      <div class="column is-full-width">
+        <h2 class="title is-3">Discussion</h2>
+
+        <div class="content has-text-justified">
+          <p>
+            <strong>Conclusions.</strong> We presented DiscreteRTC, which exploits the native inpainting capability
+            of discrete diffusion for asynchronous real-time control, eliminating the need for
+            inpainting-specific fine-tuning, heuristic guidance weights, and extra inference cost
+            inherent to flow-matching-based RTC. Simulated and real-world experiments show that
+            DiscreteRTC outperforms ContinuousRTC and other asynchronous baselines, and can be
+            combined with methods such as VLASH for further gains.
+          </p>
+          <p>
+            <strong>Limitations.</strong> Our approach uses naive k-bin quantization, which ignores the temporal
+            structure of action sequences. The modularized architecture &mdash; an autoregressive VLM paired
+            with a separate discrete diffusion action head &mdash; prevents the backbone from participating
+            in iterative unmasking, limiting information flow between perception and action.
+          </p>
+          <p>
+            <strong>Future Steps.</strong> These limitations point to two directions:
+            (1) a time-causally ordered action tokenizer that produces temporally ordered, compact
+            token representations; and (2) a unified discrete diffusion VLA in which observation
+            reasoning and action generation share the same backbone.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ============================================================ -->
+<!-- BibTeX -->
+<!-- ============================================================ -->
+<section class="section" id="BibTeX">
+  <div class="container is-max-desktop content">
+    <h2 class="title">BibTeX</h2>
+    <pre><code>@article{discretertc2026,
+  title     = {Discrete Diffusion Policies are Natural Asynchronous Executors},
+  author    = {Anonymous},
+  journal   = {CoRL},
+  year      = {2026},
+}</code></pre>
+  </div>
+</section>
+
+
+<!-- ============================================================ -->
+<!-- Footer -->
+<!-- ============================================================ -->
+<footer class="footer">
+  <div class="container">
+    <div class="content has-text-centered">
+      <a class="icon-link" href="./static/paper.pdf">
+        <i class="fas fa-file-pdf"></i>
+      </a>
+    </div>
+    <div class="columns is-centered">
+      <div class="column is-8">
+        <div class="content">
+          <p>
+            This website template is borrowed from the <a
+              href="https://github.com/nerfies/nerfies.github.io">Nerfies</a> project page, licensed
+            under a <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">Creative
+            Commons Attribution-ShareAlike 4.0 International License</a>.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
