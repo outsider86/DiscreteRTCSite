@@ -107,9 +107,22 @@
     <div class="container is-max-desktop">
       <div class="columns is-centered">
         <div class="column has-text-centered">
-          <h1 class="title is-1 publication-title">Discrete Diffusion Policies<br>are Natural Asynchronous Executors</h1>
+          <h1 class="title is-1 publication-title">DiscreteRTC: Discrete Diffusion Policies<br>are Natural Asynchronous Executors</h1>
           <div class="is-size-5 publication-authors">
-            <span class="author-block">Anonymous Author(s)</span>
+            <span class="author-block">Pengcheng Wang<sup>1</sup>,</span>
+            <span class="author-block">Kaiwen Hong<sup>2</sup>,</span>
+            <span class="author-block">Chensheng Peng<sup>1</sup>,</span>
+            <span class="author-block">Katherine Driggs-Campbell<sup>2</sup>,</span>
+            <span class="author-block">Masayoshi Tomizuka<sup>1</sup>,</span>
+            <span class="author-block">Chenfeng Xu<sup>3</sup>,</span>
+            <span class="author-block">Chen Tang<sup>4</sup></span>
+          </div>
+
+          <div class="is-size-5 publication-authors">
+            <span class="author-block"><sup>1</sup>UC Berkeley,</span>
+            <span class="author-block"><sup>2</sup>UIUC,</span>
+            <span class="author-block"><sup>3</sup>UT Austin,</span>
+            <span class="author-block"><sup>4</sup>UCLA</span>
           </div>
 
           <div class="is-size-5 publication-authors">
@@ -188,27 +201,30 @@
         <h2 class="title is-3">Abstract</h2>
         <div class="content has-text-justified">
           <p>
-            Deploying high-latency generative policies in real-time robot control requires
-            asynchronous execution, where the next action chunk is inferred while the current one
-            is being executed. Real-time chunking (RTC) achieves this for continuous diffusion and
-            flow-matching policies via gradient-based inpainting, but suffers from five key limitations:
-            inability to leverage pre-training, need for inpainting-specific fine-tuning, reliance on
-            heuristic guidance weights, extra inference-time computation from backpropagation, and a
-            distribution mismatch between inpainting conditions at inference versus training.
+            Physical AI systems are growing ever more capable, but the increasing model sizes bring
+            higher inference latency, a critical problem for cyber-physical systems that must act in
+            real time. Asynchronous execution, where a policy <em>thinks while acting</em>, offers a
+            promising solution. Real-time chunking (RTC) further resolves inter-chunk discontinuity by
+            posing chunk transitions as inpainting: freezing already-committed actions and generating
+            the rest to be consistent with them.
+          </p>
+          <p>
+            However, we show that RTC with a flow-matching action head is far from ideal: its
+            inpainting relies on inference-time gradient corrections rather than the base policy,
+            leading to no pre-training benefit, need for inpainting-specific fine-tuning, heuristic
+            guidance weights, and extra inference cost.
           </p>
           <p>
             We observe that discrete diffusion policies &mdash; which generate actions by iteratively
-            unmasking tokens &mdash; are <em>natural asynchronous executors</em>: inpainting is their
-            native operation, eliminating the first four limitations without any architectural or
-            algorithmic modification. To address the remaining distribution mismatch, we propose a
-            fine-tuning recipe that exposes the model to its own predictions as conditioning context
-            during training.
+            unmasking tokens &mdash; are <em>natural</em> asynchronous executors: inpainting is their
+            native operation, resolving all four limitations. Early stopping further provides natural
+            adaptive guidance and reduces inference cost.
           </p>
           <p>
-            Experiments on dynamic simulated benchmarks (Kinetix) and real-world manipulation tasks
-            demonstrate that <strong>DiscreteRTC</strong> achieves higher success rates and throughput
-            than continuous RTC and other asynchronous baselines, while being simpler to implement
-            and computationally cheaper.
+            We propose <strong>DiscreteRTC</strong>, and experiments on dynamic simulated benchmarks
+            and real-world manipulation tasks demonstrate that it outperforms continuous RTC and other
+            baselines in both success rate and throughput, while being simpler and computationally
+            cheaper.
           </p>
         </div>
       </div>
@@ -254,9 +270,11 @@
             <figure class="image">
               <img src="./static/figures/continuousRTC.svg" alt="Limitations of continuous RTC with flow-matching head" class="figure-img">
               <figcaption class="has-text-centered" style="margin-top: 0.5rem; color: #888; font-size: 0.9rem;">
-                <strong>Figure 1:</strong> RTC with a flow-matching head is ill-suited because
-                (a) pre-training does not include inpainting, (b) fine-tuning is required,
-                (c) heuristic guidance weights must be hand-designed, and (d) gradient-based guidance adds 2.5x inference cost.
+                <strong>Figure 1:</strong> RTC with a flow-matching head. The flow-matching head is
+                ill-suited for RTC because (a) during pre-training, the base policy is not trained on
+                inpainting tasks; (b) to acquire this capability, a specially designed fine-tuning
+                stage is required; (c) at inference time, RTC relies on heuristic guidance weight
+                design; and (d) incurs extra computation for action chunk generation.
               </figcaption>
             </figure>
           </div>
@@ -331,9 +349,12 @@
             <figure class="image">
               <img src="./static/figures/discreteRTC.svg" alt="Advantages of discrete RTC" class="figure-img">
               <figcaption class="has-text-centered" style="margin-top: 0.5rem; color: #888; font-size: 0.9rem;">
-                <strong>Figure 2:</strong> RTC with a discrete diffusion head naturally resolves all limitations:
-                (a) inpainting <em>is</em> pre-training, (b) no fine-tuning needed,
-                (c) natural guidance via partial unmasking, and (d) 0.4x inference cost.
+                <strong>Figure 2:</strong> RTC with a discrete diffusion head. The discrete diffusion
+                head is naturally suited for RTC because (a) during pre-training, the base policy is
+                already trained on inpainting tasks; (b) consequently, no inpainting-specific
+                fine-tuning is required; (c) at inference time, early stopping from the previous
+                inference leaves a natural and adaptive guidance signal; and (d) fewer tokens need to
+                be unmasked per step, reducing the computational cost of each forward pass.
               </figcaption>
             </figure>
           </div>
@@ -401,9 +422,11 @@
             <figure class="image">
               <img src="./static/figures/kinetix_main.svg" alt="Main experimental results in Kinetix" class="figure-img">
               <figcaption class="has-text-centered" style="margin-top: 0.5rem; color: #888; font-size: 0.9rem;">
-                <strong>Figure 3:</strong> Average solve rate and throughputs across all Kinetix environments
-                with different inference delays. DiscreteRTC consistently outperforms ContinuousRTC
-                and other baselines on both metrics. Each datapoint represents 2048 trials.
+                <strong>Figure 3:</strong> Experimental results in Kinetix.
+                <strong>Left:</strong> average solve rate and throughputs across all environments with
+                different inference delays; <strong>Right:</strong> solve rates for every task with
+                different inference delays. The execution horizon follows
+                <em>s</em> = max(1, <em>d</em>) and each datapoint represents 2048 trials.
               </figcaption>
             </figure>
           </div>
@@ -467,32 +490,103 @@
           <p>
             Next, we validate DiscreteRTC in the real world.
           </p>
+          <p>
+            <strong>Setup.</strong> We use a UR5e arm with a Robotiq gripper and a wrist-mounted RGB
+            camera. Demonstrations are collected at 500&nbsp;Hz via the FastUMI pipeline; each action
+            is a 10D vector [&Delta;x, &Delta;y, &Delta;z, rot6d(6), gripper]. All policies share a
+            Qwen2.5-VL-3B-Instruct VLM backbone paired with a layerwise cross-attention DiT action
+            head. For the discrete diffusion head, actions are quantized into 256 bins per dimension,
+            yielding 16 &times; 10 = 160 tokens per chunk. The robot operates at 20&nbsp;Hz with 5&times;
+            linear interpolation producing a 100&nbsp;Hz servo stream; inference runs on a single RTX
+            4090. For baselines, we mainly compare Sync and RTC policies with flow-matching and
+            discrete diffusion architectures to demonstrate our main claims.
+          </p>
+          <p>
+            <strong>Tasks.</strong> We design two dynamical tasks to stress reactiveness:
+            <strong>Dynamic Pick</strong> and <strong>Dynamic Place</strong>, where the robot must
+            pick a moving object or place it onto a moving platform. This requires the robot to
+            continuously re-estimate the object pose and execute smoothly.
+          </p>
         </div>
 
-        <!-- Real-world results placeholder -->
-        <div class="placeholder-box" style="margin-bottom: 1.5rem;">
-          <div class="placeholder-icon"><i class="fas fa-flask"></i></div>
-          <div class="placeholder-text">Real-World Experiment Results Coming Soon</div>
-          <div class="placeholder-sub">Setup, task descriptions, baselines, and quantitative results will be added here</div>
+        <!-- Real-world results table -->
+        <div class="columns is-centered" style="margin-bottom: 1.5rem;">
+          <div class="column is-10">
+            <table class="table is-bordered is-striped is-fullwidth has-text-centered">
+              <thead>
+                <tr>
+                  <th rowspan="2" class="has-text-centered" style="vertical-align: middle;">Method</th>
+                  <th colspan="2" class="has-text-centered">Success Rate &uarr;</th>
+                  <th rowspan="2" class="has-text-centered" style="vertical-align: middle;">Inference Time &darr;</th>
+                </tr>
+                <tr>
+                  <th class="has-text-centered">Dynamic Place</th>
+                  <th class="has-text-centered">Dynamic Pick</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="has-text-left">Continuous Sync</td>
+                  <td>0%</td>
+                  <td>0%</td>
+                  <td>150 ms</td>
+                </tr>
+                <tr>
+                  <td class="has-text-left">Discrete Sync</td>
+                  <td>0%</td>
+                  <td>0%</td>
+                  <td>300 ms</td>
+                </tr>
+                <tr>
+                  <td class="has-text-left">Continuous RTC</td>
+                  <td>90%</td>
+                  <td>45%</td>
+                  <td>256 ms (&sim;1.7&times;)</td>
+                </tr>
+                <tr>
+                  <td class="has-text-left"><strong>Discrete RTC (Ours)</strong></td>
+                  <td><strong>100%</strong></td>
+                  <td><strong>95%</strong></td>
+                  <td><strong>206 ms (&sim;0.6&times;)</strong></td>
+                </tr>
+              </tbody>
+            </table>
+            <p class="has-text-centered" style="color: #888; font-size: 0.9rem;">
+              <strong>Table 1:</strong> Real-world results on the two dynamical tasks. Success rate
+              over 20 trials per task and average inference time on a single RTX 4090.
+            </p>
+          </div>
+        </div>
+
+        <div class="content has-text-justified">
+          <p>
+            <strong>Results.</strong> Both Sync baselines completely fail (0%), confirming that
+            reactive asynchronous execution is indispensable in these regimes. In terms of success
+            rate, DiscreteRTC outperforms ContinuousRTC with the largest gap on the continuously
+            moving Dynamic Pick target, where reactiveness matters most. In terms of inference time,
+            the two asynchronous methods move in opposite directions: ContinuousRTC inflates
+            flow-matching cost from 150 to 256&nbsp;ms, a near-1.7&times; overhead from &Pi;GDM,
+            whereas DiscreteRTC <em>reduces</em> discrete diffusion cost from 300 to 206&nbsp;ms with
+            fewer tokens to unmask during inference. Consequently, although Discrete Sync alone is
+            slower than Continuous Sync with naive bin-discretization, DiscreteRTC ends up both faster
+            and more accurate than Continuous RTC &mdash; demonstrating that the benefits of RTC and
+            discrete diffusion compound rather than conflict.
+          </p>
         </div>
 
         <div class="columns is-centered">
-          <div class="column is-4">
+          <div class="column is-6">
             <div class="placeholder-box">
               <div class="placeholder-icon"><i class="fas fa-video"></i></div>
-              <div class="placeholder-text">Task Video 1</div>
+              <div class="placeholder-text">Dynamic Pick</div>
+              <div class="placeholder-sub">Video coming soon</div>
             </div>
           </div>
-          <div class="column is-4">
+          <div class="column is-6">
             <div class="placeholder-box">
               <div class="placeholder-icon"><i class="fas fa-video"></i></div>
-              <div class="placeholder-text">Task Video 2</div>
-            </div>
-          </div>
-          <div class="column is-4">
-            <div class="placeholder-box">
-              <div class="placeholder-icon"><i class="fas fa-video"></i></div>
-              <div class="placeholder-text">Task Video 3</div>
+              <div class="placeholder-text">Dynamic Place</div>
+              <div class="placeholder-sub">Video coming soon</div>
             </div>
           </div>
         </div>
@@ -517,21 +611,28 @@
             <strong>Conclusions.</strong> We presented DiscreteRTC, which exploits the native inpainting
             capability of discrete diffusion for asynchronous real-time control, eliminating the need
             for inpainting-specific fine-tuning, heuristic guidance weights, and extra inference cost
-            inherent to flow-matching-based RTC. Experiments on the Kinetix benchmark and real-world
-            manipulation tasks show that DiscreteRTC outperforms ContinuousRTC and other asynchronous
-            baselines, and can be combined with methods such as VLASH for further gains.
+            inherent to flow-matching-based RTC. Simulated and real-world experiments show that
+            DiscreteRTC outperforms ContinuousRTC and other asynchronous baselines, and can be
+            combined with methods such as VLASH for further gains.
           </p>
           <p>
-            <strong>Limitations.</strong> Our approach uses naive k-bin quantization, which ignores the temporal
-            structure of action sequences. The modularized architecture &mdash; an autoregressive VLM paired
-            with a separate discrete diffusion action head &mdash; prevents the backbone from participating
-            in iterative unmasking, limiting information flow between perception and action.
+            <strong>Limitations.</strong> We note several limitations of our current instantiation,
+            each coinciding with an active research direction whose progress will directly benefit
+            DiscreteRTC: (1) our naive <em>k</em>-bin quantization ignores temporal structure and
+            yields overly long token sequences, motivating compact, temporally aware tokenizers;
+            (2) our modularized AR-VLM + discrete diffusion head prevents the backbone from
+            participating in iterative unmasking, a gap that unified discrete-diffusion VLAs aim to
+            close; (3) traditional max-confidence unmasking does not yet translate the natural
+            schedule into consistent gains.
           </p>
           <p>
-            <strong>Future Steps.</strong> These limitations point to two directions:
-            (1) a time-causally ordered action tokenizer that produces temporally ordered, compact
-            token representations; and (2) a unified discrete diffusion VLA in which observation
-            reasoning and action generation share the same backbone.
+            <strong>Future Steps.</strong> These limitations point to three concrete directions:
+            (1) a <em>time-causally ordered action tokenizer</em> that produces temporally ordered,
+            compact token representations; (2) a <em>unified discrete diffusion VLA</em> in which
+            observation reasoning and action generation share the same backbone; (3) an
+            <em>appropriate yet principled unmasking strategy</em> that fully unleashes the potential
+            of the natural schedule &mdash; emerging techniques such as AR-block decoding align better
+            with the implicit autoregressive structure induced by RTC and integrate seamlessly.
           </p>
         </div>
       </div>
