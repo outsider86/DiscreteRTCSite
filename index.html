@@ -169,9 +169,9 @@
         <div class="placeholder-sub">Real-world robot demonstrations of DiscreteRTC in action</div>
       </div>
       <h2 class="subtitle has-text-centered" style="margin-top: 1.5rem;">
-        <strong>DiscreteRTC</strong> leverages the native inpainting capability of discrete diffusion
-        for asynchronous real-time robot control &mdash; no gradient-based guidance, no heuristic weights,
-        no extra inference cost.
+        By replacing the action head with a discrete diffusion policy, all limitations of flow-matching-based
+        RTC are resolved at once. Or to put it simply: <strong>Discrete Diffusion Policies are Natural
+        Asynchronous Executors.</strong>
       </h2>
     </div>
   </div>
@@ -205,9 +205,10 @@
             during training.
           </p>
           <p>
-            Experiments on simulated dynamic control benchmarks demonstrate that
-            <strong>DiscreteRTC</strong> outperforms continuous RTC and other asynchronous baselines
-            in both success rate and throughput, while being simpler and computationally cheaper.
+            Experiments on dynamic simulated benchmarks (Kinetix) and real-world manipulation tasks
+            demonstrate that <strong>DiscreteRTC</strong> achieves higher success rates and throughput
+            than continuous RTC and other asynchronous baselines, while being simpler to implement
+            and computationally cheaper.
           </p>
         </div>
       </div>
@@ -237,12 +238,10 @@
 
         <div class="content has-text-justified">
           <p>
-            Flow-matching policies require gradient-based inpainting (&#928;GDM) for asynchronous
-            execution, which introduces fundamental limitations. During pre-training, all actions
-            within a chunk are corrupted at the same noise level and denoised together &mdash; but
-            RTC requires generating from mixed-noise chunks, a pattern the model has never seen.
-            This mismatch necessitates inpainting-specific fine-tuning, heuristic guidance weight
-            design, and expensive gradient computation at every denoising step.
+            Despite its elegance, RTC with a flow-matching action head is far from ideal.
+            We systematically analyze its limitations and show that they stem from the same root cause:
+            the inpainting capability comes from the inference-time correction (e.g., &#928;GDM),
+            not from the base policy.
           </p>
         </div>
 
@@ -253,7 +252,7 @@
         <div class="columns is-centered" style="margin-bottom: 1.5rem;">
           <div class="column is-11">
             <figure class="image">
-              <img src="./static/figures/continuousRTC.png" alt="Limitations of continuous RTC with flow-matching head" class="figure-img">
+              <img src="./static/figures/continuousRTC.svg" alt="Limitations of continuous RTC with flow-matching head" class="figure-img">
               <figcaption class="has-text-centered" style="margin-top: 0.5rem; color: #888; font-size: 0.9rem;">
                 <strong>Figure 1:</strong> RTC with a flow-matching head is ill-suited because
                 (a) pre-training does not include inpainting, (b) fine-tuning is required,
@@ -266,24 +265,25 @@
         <!-- Key limitation items -->
         <div>
           <div class="key-point">
-            <strong>(a) No Pre-training Benefit.</strong>
-            The continuous policy is not pre-trained for inpainting; the guidance mechanism is imposed at inference
-            and is foreign to the learned distribution. Scaling up data or model capacity does not improve inpainting.
+            <strong>(a) Pre-training without Inpainting.</strong>
+            The flow policy is not pre-trained on action chunks with inconsistent noise levels,
+            so scaling pre-training does not directly improve asynchronous performance.
           </div>
           <div class="key-point">
-            <strong>(b) Inpainting-specific Fine-tuning Required.</strong>
-            Achieving strong inpainting performance requires additional fine-tuning with explicit inpainting objectives,
-            adding training complexity and risking interference with base generation quality.
+            <strong>(b) Fine-tuning Required.</strong>
+            Adequate inpainting quality demands a dedicated fine-tuning stage with techniques
+            such as action-suffix conditioning, adding training complexity and risking interference
+            with the base generation quality.
           </div>
           <div class="key-point">
             <strong>(c) Heuristic Guidance Weights.</strong>
-            The soft-masking schedule and gradient clipping threshold are hand-designed hyperparameters that require
-            task-specific tuning and must be revisited whenever the model, task, or hardware changes.
+            The soft-masking schedule and gradient clipping threshold are hand-designed and must be
+            re-tuned per task and model.
           </div>
           <div class="key-point">
             <strong>(d) Extra Inference Cost.</strong>
-            Gradient-based guidance requires backpropagation at every denoising step, roughly doubling compute (2.5x)
-            &mdash; directly counteracting the latency reduction that asynchronous execution is meant to provide.
+            Computing the guidance term at every denoising step roughly doubles computation,
+            ironically increasing the very latency RTC aims to hide.
           </div>
         </div>
 
@@ -314,10 +314,11 @@
 
         <div class="content has-text-justified">
           <p>
-            In discrete diffusion, inpainting is structurally identical to standard masked generation:
-            given a partially masked token sequence, the model predicts and unmasks the missing tokens.
-            No architectural modification, no additional loss term, and no inference-time guidance are
-            needed. The model generates conditioned on unmasked tokens exactly as it was trained.
+            We show that discrete diffusion policies naturally resolve the limitations of
+            flow-matching-based RTC. Since inpainting is the native operation of discrete diffusion
+            &mdash; given a partially masked token sequence, the model predicts and unmasks the
+            missing tokens &mdash; no architectural modification, no additional loss term, and no
+            inference-time guidance are needed.
           </p>
         </div>
 
@@ -328,7 +329,7 @@
         <div class="columns is-centered" style="margin-bottom: 1.5rem;">
           <div class="column is-11">
             <figure class="image">
-              <img src="./static/figures/discreteRTC.png" alt="Advantages of discrete RTC" class="figure-img">
+              <img src="./static/figures/discreteRTC.svg" alt="Advantages of discrete RTC" class="figure-img">
               <figcaption class="has-text-centered" style="margin-top: 0.5rem; color: #888; font-size: 0.9rem;">
                 <strong>Figure 2:</strong> RTC with a discrete diffusion head naturally resolves all limitations:
                 (a) inpainting <em>is</em> pre-training, (b) no fine-tuning needed,
@@ -341,24 +342,27 @@
         <!-- Key advantage items -->
         <div>
           <div class="key-point">
-            <strong>(a) Pre-training = Inpainting.</strong>
-            Generating conditioned on known tokens is identical to standard masked generation.
-            Pre-training directly improves inpainting quality &mdash; larger models and more data yield better generation.
+            <strong>(a) Pre-trained with Inpainting.</strong>
+            Scaling pre-training directly benefits asynchronous execution, since inpainting
+            is structurally identical to standard masked generation &mdash; larger models and more data
+            yield better generation.
           </div>
           <div class="key-point">
-            <strong>(b) No Fine-tuning Required.</strong>
-            Since inpainting is the native operation, the model can be deployed for asynchronous execution
-            immediately after pre-training.
+            <strong>(b) Fine-tuning Free.</strong>
+            Since the inpainting capability is acquired during pre-training, a discrete diffusion policy
+            can be deployed for asynchronous execution immediately, with no inpainting-specific fine-tuning.
           </div>
           <div class="key-point">
-            <strong>(c) Natural Guidance Scale.</strong>
-            Early stopping from previous inference leaves partially unmasked tokens as a natural, adaptive guidance
-            signal &mdash; replacing heuristic soft-masking schedules.
+            <strong>(c) Natural Guidance Weights.</strong>
+            The early-stopping mechanism provides natural guidance via the number of unmasked tokens &mdash;
+            the remaining partially unmasked actions serve as an adaptive guidance signal for the next inference,
+            replacing heuristic soft-masking schedules.
           </div>
           <div class="key-point">
             <strong>(d) Lower Inference Cost.</strong>
-            Unmasking starts from an intermediate state and ends early, reducing total steps to ~s/H of the original.
-            DiscreteRTC uses ~0.4x inference cost vs. 2.5x for continuous RTC.
+            Since unmasking starts from an intermediate state and ends at an intermediate stage, the total
+            number of unmasking steps is reduced to roughly s/H of the original. Instead of increasing
+            inference cost as in continuous RTC (2.5x), DiscreteRTC actually reduces it (~0.4x).
           </div>
         </div>
 
@@ -382,10 +386,12 @@
 
         <div class="content has-text-justified">
           <p>
-            We evaluate DiscreteRTC on <strong>Kinetix</strong>, a simulated benchmark of dynamic
-            tasks with force-based control (throwing, catching, balancing), where inference delay
-            necessitates asynchronous execution. All methods use the same training setup and network
-            size for fair comparison, with 512-bin quantization for discrete action tokenization.
+            Following RTC, we first evaluate DiscreteRTC in <strong>Kinetix</strong>, a simulated
+            benchmark of dynamic tasks with force-based control, where inference delay necessitates
+            asynchronous execution. All tasks involve dynamic motions such as throwing, catching, and
+            balancing. To simulate imperfect actuation, we add Gaussian noise to the actions, making
+            closed-loop corrections crucial for success. We adopt the same training setup and network
+            size for fair comparison, with 512-bin quantization for the action chunk discretization.
           </p>
         </div>
 
@@ -407,8 +413,9 @@
           <p>
             Across all inference delays, DiscreteRTC consistently outperforms ContinuousRTC and other
             variants on both solve rates and throughputs, showing the great advantages of the native
-            inpainting capability in discrete diffusion policies. Moreover, DiscreteRTC requires fewer
-            iterative steps than ContinuousRTC, especially under large delays with execution horizon.
+            inpainting capability in discrete diffusion policies. Moreover, as shown in Figure 4,
+            DiscreteRTC requires fewer iterative steps than ContinuousRTC, especially under large
+            delays with execution horizon as discussed in Sec. 4.2 of the paper.
           </p>
         </div>
 
@@ -436,18 +443,20 @@
 
         <div class="content has-text-justified">
           <p>
-            Figure 5 presents the results of extended variants:
+            Figure 5 presents the experimental results of more variants in Kinetix:
           </p>
           <ul>
-            <li><strong>vs. Training-time Continuous RTC:</strong> DiscreteRTC outperforms even the
-              fine-tuned continuous variant, further demonstrating the strong performance of the
+            <li><strong>vs. Training-time Continuous RTC:</strong> Under varying delays, DiscreteRTC
+              outperforms Training-time Continuous RTC, which is fine-tuned with an explicit objective
+              and recipe to improve inpainting, further demonstrating the strong performance of the
               fine-tuning free DiscreteRTC.</li>
             <li><strong>DiscreteRTC + Fixed Steps:</strong> By using fixed unmasking steps during inference,
               this variant achieves better performance by generating more fine-grained actions with the
               same computation budget.</li>
-            <li><strong>DiscreteVLASH:</strong> Integrating with VLASH yields more stable performance
-              across varying delays, demonstrating that DiscreteRTC can be seamlessly combined with
-              advanced inference-time methods for further gains.</li>
+            <li><strong>DiscreteVLASH:</strong> Integrating with VLASH achieves more stable performance
+              across varying delays but at the cost of performance drop with smaller delays. This
+              demonstrates that DiscreteRTC can be seamlessly combined with advanced inference-time
+              methods for further gains.</li>
           </ul>
         </div>
 
@@ -456,8 +465,7 @@
 
         <div class="content has-text-justified">
           <p>
-            We validate DiscreteRTC on real-world robotic manipulation tasks to demonstrate
-            its practical effectiveness under real inference latency conditions.
+            Next, we validate DiscreteRTC in the real world.
           </p>
         </div>
 
@@ -506,12 +514,12 @@
 
         <div class="content has-text-justified">
           <p>
-            <strong>Conclusions.</strong> We presented DiscreteRTC, which exploits the native inpainting capability
-            of discrete diffusion for asynchronous real-time control, eliminating the need for
-            inpainting-specific fine-tuning, heuristic guidance weights, and extra inference cost
-            inherent to flow-matching-based RTC. Simulated and real-world experiments show that
-            DiscreteRTC outperforms ContinuousRTC and other asynchronous baselines, and can be
-            combined with methods such as VLASH for further gains.
+            <strong>Conclusions.</strong> We presented DiscreteRTC, which exploits the native inpainting
+            capability of discrete diffusion for asynchronous real-time control, eliminating the need
+            for inpainting-specific fine-tuning, heuristic guidance weights, and extra inference cost
+            inherent to flow-matching-based RTC. Experiments on the Kinetix benchmark and real-world
+            manipulation tasks show that DiscreteRTC outperforms ContinuousRTC and other asynchronous
+            baselines, and can be combined with methods such as VLASH for further gains.
           </p>
           <p>
             <strong>Limitations.</strong> Our approach uses naive k-bin quantization, which ignores the temporal
