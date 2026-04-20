@@ -176,11 +176,16 @@
 <section class="hero teaser">
   <div class="container is-max-desktop">
     <div class="hero-body">
-      <div class="placeholder-box">
-        <div class="placeholder-icon"><i class="fas fa-robot"></i></div>
-        <div class="placeholder-text">Main Demo Video Coming Soon</div>
-        <div class="placeholder-sub">Real-world robot demonstrations of DiscreteRTC in action</div>
-      </div>
+      <figure class="image">
+        <img src="./static/figures/asyncInference.svg" alt="RTC with discrete diffusion policies solving dynamic manipulation" class="figure-img">
+        <figcaption class="has-text-centered" style="margin-top: 0.75rem; color: #666; font-size: 0.95rem;">
+          <strong>RTC with discrete diffusion policies solving dynamic manipulation.</strong>
+          The discrete diffusion policy is naturally suited for RTC since (a) it is trained on
+          inpainting during pre-training; (b) so no inpainting-specific fine-tuning is required;
+          (c) at inference time, early stopping from the previous inference leaves a natural
+          guidance; with (d) fewer tokens needing to be unmasked per step.
+        </figcaption>
+      </figure>
       <h2 class="subtitle has-text-centered" style="margin-top: 1.5rem;">
         By replacing the action head with a discrete diffusion policy, all limitations of flow-matching-based
         RTC are resolved at once. Or to put it simply: <strong>Discrete Diffusion Policies are Natural
@@ -201,30 +206,28 @@
         <h2 class="title is-3">Abstract</h2>
         <div class="content has-text-justified">
           <p>
-            Physical AI systems are growing ever more capable, but the increasing model sizes bring
-            higher inference latency, a critical problem for cyber-physical systems that must act in
-            real time. Asynchronous execution, where a policy <em>thinks while acting</em>, offers a
-            promising solution. Real-time chunking (RTC) further resolves inter-chunk discontinuity by
-            posing chunk transitions as inpainting: freezing already-committed actions and generating
-            the rest to be consistent with them.
+            As physical AI models grow, their inference latency becomes a critical obstacle for
+            real-time control. Asynchronous execution hides this latency by letting a policy
+            <em>think while acting</em>, and real-time chunking (RTC) removes inter-chunk
+            discontinuity by posing chunk transitions as inpainting: freezing committed actions and
+            generating the rest consistently.
           </p>
           <p>
-            However, we show that RTC with a flow-matching action head is far from ideal: its
-            inpainting relies on inference-time gradient corrections rather than the base policy,
-            leading to no pre-training benefit, need for inpainting-specific fine-tuning, heuristic
-            guidance weights, and extra inference cost.
+            However, RTC with a flow-matching head is structurally suboptimal: its inpainting relies
+            on inference-time gradient corrections rather than the base policy, yielding no
+            pre-training benefit, a fine-tuning burden, hand-tuned guidance weights, and extra
+            per-step cost that inflates the very latency RTC aims to hide.
           </p>
           <p>
-            We observe that discrete diffusion policies &mdash; which generate actions by iteratively
-            unmasking tokens &mdash; are <em>natural</em> asynchronous executors: inpainting is their
-            native operation, resolving all four limitations. Early stopping further provides natural
-            adaptive guidance and reduces inference cost.
+            We observe that discrete diffusion policies are <em>natural</em> asynchronous executors:
+            inpainting is their native operation, resolving all four limitations, while early
+            stopping provides adaptive guidance and <em>reduces</em> inference cost.
           </p>
           <p>
-            We propose <strong>DiscreteRTC</strong>, and experiments on dynamic simulated benchmarks
-            and real-world manipulation tasks demonstrate that it outperforms continuous RTC and other
-            baselines in both success rate and throughput, while being simpler and computationally
-            cheaper.
+            We propose <strong>DiscreteRTC</strong>, which replaces gradient-based inpainting with
+            native unmasking, and show on dynamic simulation and real-world manipulation tasks that
+            it outperforms continuous RTC and other baselines in success rate while being simpler and
+            faster.
           </p>
         </div>
       </div>
@@ -529,13 +532,13 @@
                   <td class="has-text-left">Continuous Sync</td>
                   <td>0%</td>
                   <td>0%</td>
-                  <td>150 ms</td>
+                  <td>151 ms</td>
                 </tr>
                 <tr>
                   <td class="has-text-left">Discrete Sync</td>
                   <td>0%</td>
                   <td>0%</td>
-                  <td>300 ms</td>
+                  <td>303 ms</td>
                 </tr>
                 <tr>
                   <td class="has-text-left">Continuous RTC</td>
