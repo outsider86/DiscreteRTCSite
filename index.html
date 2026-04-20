@@ -125,22 +125,12 @@
             <span class="author-block"><sup>4</sup>UCLA</span>
           </div>
 
-          <div class="is-size-5 publication-authors">
+          <!-- <div class="is-size-5 publication-authors">
             <span class="author-block">Submitted to CoRL 2026</span>
-          </div>
+          </div> -->
 
           <div class="column has-text-centered">
             <div class="publication-links">
-              <!-- PDF Link. -->
-              <span class="link-block">
-                <a href="./static/paper.pdf"
-                   class="external-link button is-normal is-rounded is-dark">
-                  <span class="icon">
-                      <i class="fas fa-file-pdf"></i>
-                  </span>
-                  <span>Paper</span>
-                </a>
-              </span>
               <!-- arXiv Link (placeholder). -->
               <span class="link-block">
                 <a href="#"
@@ -148,17 +138,17 @@
                   <span class="icon">
                       <i class="ai ai-arxiv"></i>
                   </span>
-                  <span>arXiv (coming soon)</span>
+                  <span>arXiv</span>
                 </a>
               </span>
               <!-- Code Link (placeholder). -->
               <span class="link-block">
-                <a href="#"
+                <a href="https://github.com/outsider86/DiscreteRTC-Kinetix"
                    class="external-link button is-normal is-rounded is-dark">
                   <span class="icon">
                       <i class="fab fa-github"></i>
                   </span>
-                  <span>Code (coming soon)</span>
+                  <span>Code</span>
                 </a>
               </span>
             </div>
@@ -186,11 +176,6 @@
           guidance; with (d) fewer tokens needing to be unmasked per step.
         </figcaption>
       </figure>
-      <h2 class="subtitle has-text-centered" style="margin-top: 1.5rem;">
-        By replacing the action head with a discrete diffusion policy, all limitations of flow-matching-based
-        RTC are resolved at once. Or to put it simply: <strong>Discrete Diffusion Policies are Natural
-        Asynchronous Executors.</strong>
-      </h2>
     </div>
   </div>
 </section>
@@ -211,19 +196,13 @@
             <em>think while acting</em>, and real-time chunking (RTC) removes inter-chunk
             discontinuity by posing chunk transitions as inpainting: freezing committed actions and
             generating the rest consistently.
-          </p>
-          <p>
             However, RTC with a flow-matching head is structurally suboptimal: its inpainting relies
             on inference-time gradient corrections rather than the base policy, yielding no
             pre-training benefit, a fine-tuning burden, hand-tuned guidance weights, and extra
             per-step cost that inflates the very latency RTC aims to hide.
-          </p>
-          <p>
             We observe that discrete diffusion policies are <em>natural</em> asynchronous executors:
             inpainting is their native operation, resolving all four limitations, while early
             stopping provides adaptive guidance and <em>reduces</em> inference cost.
-          </p>
-          <p>
             We propose <strong>DiscreteRTC</strong>, which replaces gradient-based inpainting with
             native unmasking, and show on dynamic simulation and real-world manipulation tasks that
             it outperforms continuous RTC and other baselines in success rate while being simpler and
@@ -512,6 +491,18 @@
           </p>
         </div>
 
+        <!-- Real-world setup image -->
+        <div class="columns is-centered" style="margin-bottom: 1.5rem;">
+          <div class="column is-10">
+            <figure class="image">
+              <img src="./static/figures/realworld_setup.jpg" alt="Real-world setup for Dynamic Pick and Place" class="figure-img">
+              <figcaption class="has-text-centered" style="margin-top: 0.5rem; color: #888; font-size: 0.9rem;">
+                <strong>Figure 6:</strong> Real-world setup for the Dynamic Pick and Dynamic Place tasks.
+              </figcaption>
+            </figure>
+          </div>
+        </div>
+
         <!-- Real-world results table -->
         <div class="columns is-centered" style="margin-bottom: 1.5rem;">
           <div class="column is-10">
@@ -577,20 +568,49 @@
           </p>
         </div>
 
+        <!-- Dynamic Pick videos -->
+        <h4 class="title is-5 has-text-centered" style="margin-top: 2rem; margin-bottom: 1rem;">Dynamic Pick</h4>
         <div class="columns is-centered">
-          <div class="column is-6">
-            <div class="placeholder-box">
-              <div class="placeholder-icon"><i class="fas fa-video"></i></div>
-              <div class="placeholder-text">Dynamic Pick</div>
-              <div class="placeholder-sub">Video coming soon</div>
-            </div>
+          <div class="column is-4">
+            <div class="viz-label">Continuous Sync (4&times;)</div>
+            <video autoplay muted loop playsinline preload="metadata" style="width: 100%; border-radius: 8px;">
+              <source src="./static/videos/realworld/pick-sync-4x.mp4" type="video/mp4">
+            </video>
           </div>
-          <div class="column is-6">
-            <div class="placeholder-box">
-              <div class="placeholder-icon"><i class="fas fa-video"></i></div>
-              <div class="placeholder-text">Dynamic Place</div>
-              <div class="placeholder-sub">Video coming soon</div>
-            </div>
+          <div class="column is-4">
+            <div class="viz-label">Continuous RTC</div>
+            <video autoplay muted loop playsinline preload="metadata" style="width: 100%; border-radius: 8px;">
+              <source src="./static/videos/realworld/fm-pick.mp4" type="video/mp4">
+            </video>
+          </div>
+          <div class="column is-4">
+            <div class="viz-label"><strong>Discrete RTC (Ours)</strong></div>
+            <video autoplay muted loop playsinline preload="metadata" style="width: 100%; border-radius: 8px;">
+              <source src="./static/videos/realworld/dd-pick.mp4" type="video/mp4">
+            </video>
+          </div>
+        </div>
+
+        <!-- Dynamic Place videos -->
+        <h4 class="title is-5 has-text-centered" style="margin-top: 2rem; margin-bottom: 1rem;">Dynamic Place</h4>
+        <div class="columns is-centered">
+          <div class="column is-4">
+            <div class="viz-label">Continuous Sync (4&times;)</div>
+            <video autoplay muted loop playsinline preload="metadata" style="width: 100%; border-radius: 8px;">
+              <source src="./static/videos/realworld/place-sync-4x.mp4" type="video/mp4">
+            </video>
+          </div>
+          <div class="column is-4">
+            <div class="viz-label">Continuous RTC</div>
+            <video autoplay muted loop playsinline preload="metadata" style="width: 100%; border-radius: 8px;">
+              <source src="./static/videos/realworld/fm-place.mp4" type="video/mp4">
+            </video>
+          </div>
+          <div class="column is-4">
+            <div class="viz-label"><strong>Discrete RTC (Ours)</strong></div>
+            <video autoplay muted loop playsinline preload="metadata" style="width: 100%; border-radius: 8px;">
+              <source src="./static/videos/realworld/dd-place.mp4" type="video/mp4">
+            </video>
           </div>
         </div>
 
@@ -651,9 +671,9 @@
   <div class="container is-max-desktop content">
     <h2 class="title">BibTeX</h2>
     <pre><code>@article{discretertc2026,
-  title     = {Discrete Diffusion Policies are Natural Asynchronous Executors},
+  title     = {DiscreteRTC: Discrete Diffusion Policies are Natural Asynchronous Executors},
   author    = {Anonymous},
-  journal   = {CoRL},
+  journal   = {ArXiv},
   year      = {2026},
 }</code></pre>
   </div>
