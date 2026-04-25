@@ -1,0 +1,106 @@
+<?xml version='1.0' encoding='utf-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     viewBox="0 0 1000 490"
+     font-family="'DejaVu Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif"
+     style="background:white">
+  <rect width="1000" height="490" fill="white" />
+
+  <defs>
+    <marker id="reuseArrow" markerWidth="8" markerHeight="6" refX="6" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#4A7DC0" />
+    </marker>
+    <marker id="tickArrow" markerWidth="6" markerHeight="4" refX="3" refY="2" orient="auto">
+      <polygon points="0 0, 6 2, 0 4" fill="#555" />
+    </marker>
+  </defs>
+
+  <!-- Title -->
+  <text x="500" y="24" text-anchor="middle" font-size="16" font-weight="bold" fill="#333">
+    Stacked Asynchronous Inference with Partial Chunk Reuse
+  </text>
+
+  <!-- Four robot-arm frames -->
+  <image xlink:href="../../../PnPcover3.png" x="50" y="40" width="800" height="170" preserveAspectRatio="xMidYMid meet" />
+  <rect x="50" y="40" width="800" height="170" fill="none" stroke="#888" stroke-width="1.2" />
+
+  <!-- Frame column ticks -->
+  <line x1="50"  y1="210" x2="50"  y2="220" stroke="#555" stroke-width="1" />
+  <line x1="250" y1="210" x2="250" y2="220" stroke="#555" stroke-width="1" />
+  <line x1="450" y1="210" x2="450" y2="220" stroke="#555" stroke-width="1" />
+  <line x1="650" y1="210" x2="650" y2="220" stroke="#555" stroke-width="1" />
+  <line x1="850" y1="210" x2="850" y2="220" stroke="#555" stroke-width="1" />
+
+  <!-- Frame labels -->
+  <text x="150" y="234" text-anchor="middle" font-size="11" fill="#333">frame t</text>
+  <text x="350" y="234" text-anchor="middle" font-size="11" fill="#333">frame t+1</text>
+  <text x="550" y="234" text-anchor="middle" font-size="11" fill="#333">frame t+2</text>
+  <text x="750" y="234" text-anchor="middle" font-size="11" fill="#333">frame t+3</text>
+
+  <!-- Bottom panel holding the chunks -->
+  <rect x="20" y="256" width="960" height="220" rx="8" fill="#e4f5e0" stroke="#aaa" stroke-width="1.2" />
+
+  <!-- Dashed frame-boundary guides through the panel -->
+  <line x1="250" y1="256" x2="250" y2="476" stroke="#aaa" stroke-width="1" stroke-dasharray="5,4" />
+  <line x1="450" y1="256" x2="450" y2="476" stroke="#aaa" stroke-width="1" stroke-dasharray="5,4" />
+  <line x1="650" y1="256" x2="650" y2="476" stroke="#aaa" stroke-width="1" stroke-dasharray="5,4" />
+  <line x1="850" y1="256" x2="850" y2="476" stroke="#aaa" stroke-width="1" stroke-dasharray="5,4" />
+
+  <!-- ===== Chunk A : previous inference (dominates frames t and t+1) ===== -->
+  <text x="170" y="288" text-anchor="middle" font-size="12" fill="#333" font-weight="bold">Inference i − 1 (previous)</text>
+
+  <!-- 10 action cells, 50 wide, x = 50 .. 550
+       cells 1-8 green (primary, frames t..t+1), cells 9-10 yellow (overlap tail into frame t+2) -->
+  <g id="chunkA">
+    <rect x="50"  y="300" width="50" height="44" fill="#2e8b57" stroke="#fff" stroke-width="1" />
+    <rect x="100" y="300" width="50" height="44" fill="#2e8b57" stroke="#fff" stroke-width="1" />
+    <rect x="150" y="300" width="50" height="44" fill="#2e8b57" stroke="#fff" stroke-width="1" />
+    <rect x="200" y="300" width="50" height="44" fill="#2e8b57" stroke="#fff" stroke-width="1" />
+    <rect x="250" y="300" width="50" height="44" fill="#2e8b57" stroke="#fff" stroke-width="1" />
+    <rect x="300" y="300" width="50" height="44" fill="#2e8b57" stroke="#fff" stroke-width="1" />
+    <rect x="350" y="300" width="50" height="44" fill="#2e8b57" stroke="#fff" stroke-width="1" />
+    <rect x="400" y="300" width="50" height="44" fill="#2e8b57" stroke="#fff" stroke-width="1" />
+    <!-- overlap / reused tail -->
+    <rect x="450" y="300" width="50" height="44" fill="#e8d810" stroke="#fff" stroke-width="1" />
+    <rect x="500" y="300" width="50" height="44" fill="#e8d810" stroke="#fff" stroke-width="1" />
+    <rect x="50"  y="300" width="500" height="44" fill="none" stroke="#333" stroke-width="1.5" />
+  </g>
+
+  <!-- Bracket and label under chunk A -->
+  <path d="M 50,352 L 50,358 L 550,358 L 550,352" fill="none" stroke="#555" stroke-width="1" />
+  <text x="300" y="372" text-anchor="middle" font-size="11" fill="#333">chunk A  (horizon H)</text>
+
+  <!-- ===== Chunk B : current inference (dominates frames t+2 and t+3) ===== -->
+  <text x="700" y="460" text-anchor="middle" font-size="12" fill="#333" font-weight="bold">Inference i (current)</text>
+
+  <!-- 10 action cells, 50 wide, x = 450 .. 950
+       cells 1-2 yellow (reused from A), cells 3-10 green (new predictions) -->
+  <g id="chunkB">
+    <rect x="450" y="400" width="50" height="44" fill="#e8d810" stroke="#fff" stroke-width="1" />
+    <rect x="500" y="400" width="50" height="44" fill="#e8d810" stroke="#fff" stroke-width="1" />
+    <rect x="550" y="400" width="50" height="44" fill="#2e8b57" stroke="#fff" stroke-width="1" />
+    <rect x="600" y="400" width="50" height="44" fill="#2e8b57" stroke="#fff" stroke-width="1" />
+    <rect x="650" y="400" width="50" height="44" fill="#2e8b57" stroke="#fff" stroke-width="1" />
+    <rect x="700" y="400" width="50" height="44" fill="#2e8b57" stroke="#fff" stroke-width="1" />
+    <rect x="750" y="400" width="50" height="44" fill="#2e8b57" stroke="#fff" stroke-width="1" />
+    <rect x="800" y="400" width="50" height="44" fill="#2e8b57" stroke="#fff" stroke-width="1" />
+    <rect x="850" y="400" width="50" height="44" fill="#2e8b57" stroke="#fff" stroke-width="1" />
+    <rect x="900" y="400" width="50" height="44" fill="#2e8b57" stroke="#fff" stroke-width="1" />
+    <rect x="450" y="400" width="500" height="44" fill="none" stroke="#333" stroke-width="1.5" />
+  </g>
+
+  <!-- Bracket above chunk B -->
+  <path d="M 450,392 L 450,386 L 950,386 L 950,392" fill="none" stroke="#555" stroke-width="1" />
+
+  <!-- ===== Partial-reuse arrow (A's tail -> B's head) ===== -->
+  <path d="M 500,346 C 500,365 500,380 500,398"
+        fill="none" stroke="#4A7DC0" stroke-width="2" marker-end="url(#reuseArrow)" />
+  <text x="512" y="376" font-size="11" fill="#4A7DC0" font-style="italic">partial reuse</text>
+
+  <!-- ===== Legend ===== -->
+  <g transform="translate(620, 268)">
+    <rect x="0"  y="0" width="14" height="14" fill="#2e8b57" stroke="#888" stroke-width="0.6" />
+    <text x="20" y="11" font-size="10" fill="#333">newly predicted action</text>
+    <rect x="170" y="0" width="14" height="14" fill="#e8d810" stroke="#888" stroke-width="0.6" />
+    <text x="190" y="11" font-size="10" fill="#333">reused from previous chunk</text>
+  </g>
+</svg>

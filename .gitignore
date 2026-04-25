@@ -1,2 +1,11 @@
 .DS_store
 .idea
+
+# Python build artifacts (under static/figures/experiments/)
+__pycache__/
+*.pyc
+
+# Original-resolution capture files — too large for GitHub (>100MB).
+# The web-encoded mp4 versions in static/videos/realworld/ are committed instead.
+Videos/**/*.mov
+Videos/**/*.MOV

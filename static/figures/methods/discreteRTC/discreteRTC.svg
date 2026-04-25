@@ -1,0 +1,528 @@
+<?xml version='1.0' encoding='utf-8'?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 340"
+     font-family="'Times New Roman', 'CMU Serif', Georgia, serif"
+     font-weight="bold"
+     style="background:white">
+  <rect x="0" y="0" width="780" height="340" fill="white" />
+
+  <defs>
+    <marker id="arrowhead" markerWidth="7" markerHeight="5" refX="4" refY="2.5" orient="auto">
+      <polygon points="0 0, 7 2.5, 0 5" fill="#888" />
+    </marker>
+    <marker id="arrowSub" markerWidth="7" markerHeight="5" refX="4" refY="2.5" orient="auto">
+      <polygon points="0 0, 7 2.5, 0 5" fill="#555" />
+    </marker>
+    <marker id="axisArrow" markerWidth="6" markerHeight="4" refX="3" refY="2" orient="auto">
+      <polygon points="0 0, 6 2, 0 4" fill="#333" />
+    </marker>
+    <marker id="curveArrow" markerWidth="7" markerHeight="5" refX="4" refY="2.5" orient="auto">
+      <polygon points="0 0, 7 2.5, 0 5" fill="#555" />
+    </marker>
+  </defs>
+
+  <!-- =========================================================== -->
+  <!-- (1,1)-(1,2)  BIG CHUNKS panel  — 500×160                     -->
+  <!-- Each action = 40×40 cell containing a 3×3 token grid.        -->
+  <!--   token size 12 , stride 13 , offsets (1,14,27) inside cell. -->
+  <!-- =========================================================== -->
+  <g id="main-chunks">
+    <text x="300" y="24" font-size="20" font-weight="bold"
+          text-anchor="middle" fill="#333">RTC with Discrete Diffusion Head</text>
+
+    <text x="55" y="58" font-size="14" font-weight="bold"
+          text-anchor="middle" fill="#888">Before</text>
+    <text x="55" y="76" font-size="14" font-weight="bold"
+          text-anchor="middle" fill="#888">Inference</text>
+
+    <!-- ========= BEFORE chunk — 10 action cells ========= -->
+    <!-- Cells 1-2 (prefix d=2): all 9 tokens green -->
+    <rect x="101" y="45" width="12" height="12" fill="#2e8b57" /><rect x="114" y="45" width="12" height="12" fill="#2e8b57" /><rect x="127" y="45" width="12" height="12" fill="#2e8b57" />
+    <rect x="101" y="58" width="12" height="12" fill="#2e8b57" /><rect x="114" y="58" width="12" height="12" fill="#2e8b57" /><rect x="127" y="58" width="12" height="12" fill="#2e8b57" />
+    <rect x="101" y="71" width="12" height="12" fill="#2e8b57" /><rect x="114" y="71" width="12" height="12" fill="#2e8b57" /><rect x="127" y="71" width="12" height="12" fill="#2e8b57" />
+
+    <rect x="141" y="45" width="12" height="12" fill="#2e8b57" /><rect x="154" y="45" width="12" height="12" fill="#2e8b57" /><rect x="167" y="45" width="12" height="12" fill="#2e8b57" />
+    <rect x="141" y="58" width="12" height="12" fill="#2e8b57" /><rect x="154" y="58" width="12" height="12" fill="#2e8b57" /><rect x="167" y="58" width="12" height="12" fill="#2e8b57" />
+    <rect x="141" y="71" width="12" height="12" fill="#2e8b57" /><rect x="154" y="71" width="12" height="12" fill="#2e8b57" /><rect x="167" y="71" width="12" height="12" fill="#2e8b57" />
+
+    <!-- Cells 3-6 (intermediate H-d-s=4): progressive diagonal masking -->
+    <!-- C3 : 8G 1Y  (random — Y at (1,2)) -->
+    <rect x="181" y="45" width="12" height="12" fill="#2e8b57" /><rect x="194" y="45" width="12" height="12" fill="#2e8b57" /><rect x="207" y="45" width="12" height="12" fill="#2e8b57" />
+    <rect x="181" y="58" width="12" height="12" fill="#2e8b57" /><rect x="194" y="58" width="12" height="12" fill="#2e8b57" /><rect x="207" y="58" width="12" height="12" fill="#e8d810" />
+    <rect x="181" y="71" width="12" height="12" fill="#2e8b57" /><rect x="194" y="71" width="12" height="12" fill="#2e8b57" /><rect x="207" y="71" width="12" height="12" fill="#2e8b57" />
+
+    <!-- C4 : 6G 3Y  (random — Y at (0,1),(1,2),(2,0)) -->
+    <rect x="221" y="45" width="12" height="12" fill="#2e8b57" /><rect x="234" y="45" width="12" height="12" fill="#e8d810" /><rect x="247" y="45" width="12" height="12" fill="#2e8b57" />
+    <rect x="221" y="58" width="12" height="12" fill="#2e8b57" /><rect x="234" y="58" width="12" height="12" fill="#2e8b57" /><rect x="247" y="58" width="12" height="12" fill="#e8d810" />
+    <rect x="221" y="71" width="12" height="12" fill="#e8d810" /><rect x="234" y="71" width="12" height="12" fill="#2e8b57" /><rect x="247" y="71" width="12" height="12" fill="#2e8b57" />
+
+    <!-- C5 : 3G 6Y  (random — G at (0,1),(1,2),(2,0)) -->
+    <rect x="261" y="45" width="12" height="12" fill="#e8d810" /><rect x="274" y="45" width="12" height="12" fill="#2e8b57" /><rect x="287" y="45" width="12" height="12" fill="#e8d810" />
+    <rect x="261" y="58" width="12" height="12" fill="#e8d810" /><rect x="274" y="58" width="12" height="12" fill="#e8d810" /><rect x="287" y="58" width="12" height="12" fill="#2e8b57" />
+    <rect x="261" y="71" width="12" height="12" fill="#2e8b57" /><rect x="274" y="71" width="12" height="12" fill="#e8d810" /><rect x="287" y="71" width="12" height="12" fill="#e8d810" />
+
+    <!-- C6 : 1G 8Y  (random — only G at (0,2)) -->
+    <rect x="301" y="45" width="12" height="12" fill="#e8d810" /><rect x="314" y="45" width="12" height="12" fill="#e8d810" /><rect x="327" y="45" width="12" height="12" fill="#2e8b57" />
+    <rect x="301" y="58" width="12" height="12" fill="#e8d810" /><rect x="314" y="58" width="12" height="12" fill="#e8d810" /><rect x="327" y="58" width="12" height="12" fill="#e8d810" />
+    <rect x="301" y="71" width="12" height="12" fill="#e8d810" /><rect x="314" y="71" width="12" height="12" fill="#e8d810" /><rect x="327" y="71" width="12" height="12" fill="#e8d810" />
+
+    <!-- Cells 7-10 (future s=4): all 9 tokens yellow -->
+    <rect x="341" y="45" width="12" height="12" fill="#e8d810" /><rect x="354" y="45" width="12" height="12" fill="#e8d810" /><rect x="367" y="45" width="12" height="12" fill="#e8d810" />
+    <rect x="341" y="58" width="12" height="12" fill="#e8d810" /><rect x="354" y="58" width="12" height="12" fill="#e8d810" /><rect x="367" y="58" width="12" height="12" fill="#e8d810" />
+    <rect x="341" y="71" width="12" height="12" fill="#e8d810" /><rect x="354" y="71" width="12" height="12" fill="#e8d810" /><rect x="367" y="71" width="12" height="12" fill="#e8d810" />
+
+    <rect x="381" y="45" width="12" height="12" fill="#e8d810" /><rect x="394" y="45" width="12" height="12" fill="#e8d810" /><rect x="407" y="45" width="12" height="12" fill="#e8d810" />
+    <rect x="381" y="58" width="12" height="12" fill="#e8d810" /><rect x="394" y="58" width="12" height="12" fill="#e8d810" /><rect x="407" y="58" width="12" height="12" fill="#e8d810" />
+    <rect x="381" y="71" width="12" height="12" fill="#e8d810" /><rect x="394" y="71" width="12" height="12" fill="#e8d810" /><rect x="407" y="71" width="12" height="12" fill="#e8d810" />
+
+    <rect x="421" y="45" width="12" height="12" fill="#e8d810" /><rect x="434" y="45" width="12" height="12" fill="#e8d810" /><rect x="447" y="45" width="12" height="12" fill="#e8d810" />
+    <rect x="421" y="58" width="12" height="12" fill="#e8d810" /><rect x="434" y="58" width="12" height="12" fill="#e8d810" /><rect x="447" y="58" width="12" height="12" fill="#e8d810" />
+    <rect x="421" y="71" width="12" height="12" fill="#e8d810" /><rect x="434" y="71" width="12" height="12" fill="#e8d810" /><rect x="447" y="71" width="12" height="12" fill="#e8d810" />
+
+    <rect x="461" y="45" width="12" height="12" fill="#e8d810" /><rect x="474" y="45" width="12" height="12" fill="#e8d810" /><rect x="487" y="45" width="12" height="12" fill="#e8d810" />
+    <rect x="461" y="58" width="12" height="12" fill="#e8d810" /><rect x="474" y="58" width="12" height="12" fill="#e8d810" /><rect x="487" y="58" width="12" height="12" fill="#e8d810" />
+    <rect x="461" y="71" width="12" height="12" fill="#e8d810" /><rect x="474" y="71" width="12" height="12" fill="#e8d810" /><rect x="487" y="71" width="12" height="12" fill="#e8d810" />
+
+    <!-- BEFORE chunk outer frame + dividers -->
+    <rect x="100" y="44" width="400" height="40" fill="none" stroke="#888" stroke-width="1.5" />
+    <line x1="140" y1="44" x2="140" y2="84" stroke="#888" stroke-width="1.2" />
+    <line x1="180" y1="44" x2="180" y2="84" stroke="#888" stroke-width="1.2" />
+    <line x1="220" y1="44" x2="220" y2="84" stroke="#888" stroke-width="1.2" />
+    <line x1="260" y1="44" x2="260" y2="84" stroke="#888" stroke-width="1.2" />
+    <line x1="300" y1="44" x2="300" y2="84" stroke="#888" stroke-width="1.2" />
+    <line x1="340" y1="44" x2="340" y2="84" stroke="#888" stroke-width="1.2" />
+    <line x1="380" y1="44" x2="380" y2="84" stroke="#888" stroke-width="1.2" />
+    <line x1="420" y1="44" x2="420" y2="84" stroke="#888" stroke-width="1.2" />
+    <line x1="460" y1="44" x2="460" y2="84" stroke="#888" stroke-width="1.2" />
+
+    <!-- Gray dashed region dividers -->
+    <line x1="180" y1="38" x2="180" y2="166" stroke="#aaa"
+          stroke-width="1.2" stroke-dasharray="5,4" />
+    <line x1="340" y1="38" x2="340" y2="166" stroke="#aaa"
+          stroke-width="1.2" stroke-dasharray="5,4" />
+
+<!-- Region titles + letters in gap -->
+    <text x="140" y="102" font-size="11" font-weight="bold"
+          text-anchor="middle" fill="#333">Inference Delay</text>
+    <text x="260" y="102" font-size="11" font-weight="bold"
+          text-anchor="middle" fill="#333">Intermediate Region</text>
+    <text x="420" y="102" font-size="11" font-weight="bold"
+          text-anchor="middle" fill="#333">Execution Horizon</text>
+
+    <text x="139" y="117" font-size="13" font-weight="bold" font-style="italic"
+          text-anchor="middle" fill="#333">d</text>
+    <text x="260" y="117" font-size="13" font-weight="bold" font-style="italic"
+          text-anchor="middle" fill="#333">H &#8722; d &#8722; s</text>
+    <text x="421" y="117" font-size="13" font-weight="bold" font-style="italic"
+          text-anchor="middle" fill="#333">s</text>
+
+    <text x="55" y="140" font-size="14" font-weight="bold"
+          text-anchor="middle" fill="#888">After</text>
+    <text x="55" y="158" font-size="14" font-weight="bold"
+          text-anchor="middle" fill="#888">Inference</text>
+
+    <!-- ========= AFTER chunk — all tokens green ========= -->
+    <rect x="101" y="127" width="12" height="12" fill="#2e8b57" /><rect x="114" y="127" width="12" height="12" fill="#2e8b57" /><rect x="127" y="127" width="12" height="12" fill="#2e8b57" />
+    <rect x="101" y="140" width="12" height="12" fill="#2e8b57" /><rect x="114" y="140" width="12" height="12" fill="#2e8b57" /><rect x="127" y="140" width="12" height="12" fill="#2e8b57" />
+    <rect x="101" y="153" width="12" height="12" fill="#2e8b57" /><rect x="114" y="153" width="12" height="12" fill="#2e8b57" /><rect x="127" y="153" width="12" height="12" fill="#2e8b57" />
+
+    <rect x="141" y="127" width="12" height="12" fill="#2e8b57" /><rect x="154" y="127" width="12" height="12" fill="#2e8b57" /><rect x="167" y="127" width="12" height="12" fill="#2e8b57" />
+    <rect x="141" y="140" width="12" height="12" fill="#2e8b57" /><rect x="154" y="140" width="12" height="12" fill="#2e8b57" /><rect x="167" y="140" width="12" height="12" fill="#2e8b57" />
+    <rect x="141" y="153" width="12" height="12" fill="#2e8b57" /><rect x="154" y="153" width="12" height="12" fill="#2e8b57" /><rect x="167" y="153" width="12" height="12" fill="#2e8b57" />
+
+    <rect x="181" y="127" width="12" height="12" fill="#2e8b57" /><rect x="194" y="127" width="12" height="12" fill="#2e8b57" /><rect x="207" y="127" width="12" height="12" fill="#2e8b57" />
+    <rect x="181" y="140" width="12" height="12" fill="#2e8b57" /><rect x="194" y="140" width="12" height="12" fill="#2e8b57" /><rect x="207" y="140" width="12" height="12" fill="#2e8b57" />
+    <rect x="181" y="153" width="12" height="12" fill="#2e8b57" /><rect x="194" y="153" width="12" height="12" fill="#2e8b57" /><rect x="207" y="153" width="12" height="12" fill="#2e8b57" />
+
+    <rect x="221" y="127" width="12" height="12" fill="#2e8b57" /><rect x="234" y="127" width="12" height="12" fill="#2e8b57" /><rect x="247" y="127" width="12" height="12" fill="#2e8b57" />
+    <rect x="221" y="140" width="12" height="12" fill="#2e8b57" /><rect x="234" y="140" width="12" height="12" fill="#2e8b57" /><rect x="247" y="140" width="12" height="12" fill="#2e8b57" />
+    <rect x="221" y="153" width="12" height="12" fill="#2e8b57" /><rect x="234" y="153" width="12" height="12" fill="#2e8b57" /><rect x="247" y="153" width="12" height="12" fill="#2e8b57" />
+
+    <rect x="261" y="127" width="12" height="12" fill="#2e8b57" /><rect x="274" y="127" width="12" height="12" fill="#2e8b57" /><rect x="287" y="127" width="12" height="12" fill="#2e8b57" />
+    <rect x="261" y="140" width="12" height="12" fill="#2e8b57" /><rect x="274" y="140" width="12" height="12" fill="#2e8b57" /><rect x="287" y="140" width="12" height="12" fill="#2e8b57" />
+    <rect x="261" y="153" width="12" height="12" fill="#2e8b57" /><rect x="274" y="153" width="12" height="12" fill="#2e8b57" /><rect x="287" y="153" width="12" height="12" fill="#2e8b57" />
+
+    <rect x="301" y="127" width="12" height="12" fill="#2e8b57" /><rect x="314" y="127" width="12" height="12" fill="#2e8b57" /><rect x="327" y="127" width="12" height="12" fill="#2e8b57" />
+    <rect x="301" y="140" width="12" height="12" fill="#2e8b57" /><rect x="314" y="140" width="12" height="12" fill="#2e8b57" /><rect x="327" y="140" width="12" height="12" fill="#2e8b57" />
+    <rect x="301" y="153" width="12" height="12" fill="#2e8b57" /><rect x="314" y="153" width="12" height="12" fill="#2e8b57" /><rect x="327" y="153" width="12" height="12" fill="#2e8b57" />
+
+    <!-- Cells 7-10 : early-stop leaves them in a fresh random-mask state -->
+    <!-- C7 : [[1,0,0],[0,1,1],[1,0,1]] -->
+    <rect x="341" y="127" width="12" height="12" fill="#2e8b57" /><rect x="354" y="127" width="12" height="12" fill="#e8d810" /><rect x="367" y="127" width="12" height="12" fill="#e8d810" />
+    <rect x="341" y="140" width="12" height="12" fill="#e8d810" /><rect x="354" y="140" width="12" height="12" fill="#2e8b57" /><rect x="367" y="140" width="12" height="12" fill="#2e8b57" />
+    <rect x="341" y="153" width="12" height="12" fill="#2e8b57" /><rect x="354" y="153" width="12" height="12" fill="#e8d810" /><rect x="367" y="153" width="12" height="12" fill="#2e8b57" />
+
+    <!-- C8 : [[0,1,1],[1,0,0],[0,1,0]] -->
+    <rect x="381" y="127" width="12" height="12" fill="#e8d810" /><rect x="394" y="127" width="12" height="12" fill="#2e8b57" /><rect x="407" y="127" width="12" height="12" fill="#2e8b57" />
+    <rect x="381" y="140" width="12" height="12" fill="#2e8b57" /><rect x="394" y="140" width="12" height="12" fill="#e8d810" /><rect x="407" y="140" width="12" height="12" fill="#e8d810" />
+    <rect x="381" y="153" width="12" height="12" fill="#e8d810" /><rect x="394" y="153" width="12" height="12" fill="#2e8b57" /><rect x="407" y="153" width="12" height="12" fill="#e8d810" />
+
+    <!-- C9 : [[1,0,1],[0,0,1],[1,1,0]] -->
+    <rect x="421" y="127" width="12" height="12" fill="#2e8b57" /><rect x="434" y="127" width="12" height="12" fill="#e8d810" /><rect x="447" y="127" width="12" height="12" fill="#2e8b57" />
+    <rect x="421" y="140" width="12" height="12" fill="#e8d810" /><rect x="434" y="140" width="12" height="12" fill="#e8d810" /><rect x="447" y="140" width="12" height="12" fill="#2e8b57" />
+    <rect x="421" y="153" width="12" height="12" fill="#2e8b57" /><rect x="434" y="153" width="12" height="12" fill="#2e8b57" /><rect x="447" y="153" width="12" height="12" fill="#e8d810" />
+
+    <!-- C10 : [[0,1,0],[1,1,0],[0,0,1]] -->
+    <rect x="461" y="127" width="12" height="12" fill="#e8d810" /><rect x="474" y="127" width="12" height="12" fill="#2e8b57" /><rect x="487" y="127" width="12" height="12" fill="#e8d810" />
+    <rect x="461" y="140" width="12" height="12" fill="#2e8b57" /><rect x="474" y="140" width="12" height="12" fill="#2e8b57" /><rect x="487" y="140" width="12" height="12" fill="#e8d810" />
+    <rect x="461" y="153" width="12" height="12" fill="#e8d810" /><rect x="474" y="153" width="12" height="12" fill="#e8d810" /><rect x="487" y="153" width="12" height="12" fill="#2e8b57" />
+
+    <!-- AFTER chunk outer frame + dividers -->
+    <rect x="100" y="126" width="400" height="40" fill="none" stroke="#888" stroke-width="1.5" />
+    <line x1="140" y1="126" x2="140" y2="166" stroke="#888" stroke-width="1.2" />
+    <line x1="180" y1="126" x2="180" y2="166" stroke="#888" stroke-width="1.2" />
+    <line x1="220" y1="126" x2="220" y2="166" stroke="#888" stroke-width="1.2" />
+    <line x1="260" y1="126" x2="260" y2="166" stroke="#888" stroke-width="1.2" />
+    <line x1="300" y1="126" x2="300" y2="166" stroke="#888" stroke-width="1.2" />
+    <line x1="340" y1="126" x2="340" y2="166" stroke="#888" stroke-width="1.2" />
+    <line x1="380" y1="126" x2="380" y2="166" stroke="#888" stroke-width="1.2" />
+    <line x1="420" y1="126" x2="420" y2="166" stroke="#888" stroke-width="1.2" />
+    <line x1="460" y1="126" x2="460" y2="166" stroke="#888" stroke-width="1.2" />
+  </g>
+
+  <!-- =========================================================== -->
+  <!-- (1,3)  Panel (a) — Inpainting as Pre-training   250×160     -->
+  <!-- Sub-chunks : 10 cells 22×22 with 3×3 tokens (size 6)         -->
+  <!-- =========================================================== -->
+  <g id="panel-a">
+    <rect x="530" y="10" width="250" height="160" rx="8" fill="#e4f5e0"
+          stroke="#aaa" stroke-width="1.2" />
+    <text x="544" y="30" font-size="15" font-weight="bold"
+          fill="#333">(a) Inpainting as Pre-training</text>
+
+    <text x="655" y="58" font-size="14" font-weight="bold"
+          text-anchor="middle" fill="#333">Random Masking Pattern</text>
+
+    <!-- Top chunk : 10 cells of 22 , x=545..765 , y=68..90 -->
+    <!-- Tokens 6×6 at offsets (1,8,15) within each cell.  Random pattern. -->
+
+    <!-- C1 : [[1,0,1],[0,1,1],[1,0,0]] at x=545 -->
+    <rect x="546" y="69" width="6" height="6" fill="#2e8b57" /><rect x="553" y="69" width="6" height="6" fill="#e8d810" /><rect x="560" y="69" width="6" height="6" fill="#2e8b57" />
+    <rect x="546" y="76" width="6" height="6" fill="#e8d810" /><rect x="553" y="76" width="6" height="6" fill="#2e8b57" /><rect x="560" y="76" width="6" height="6" fill="#2e8b57" />
+    <rect x="546" y="83" width="6" height="6" fill="#2e8b57" /><rect x="553" y="83" width="6" height="6" fill="#e8d810" /><rect x="560" y="83" width="6" height="6" fill="#e8d810" />
+
+    <!-- C2 : [[0,1,0],[1,0,1],[0,1,0]]  checker  at x=567 -->
+    <rect x="568" y="69" width="6" height="6" fill="#e8d810" /><rect x="575" y="69" width="6" height="6" fill="#2e8b57" /><rect x="582" y="69" width="6" height="6" fill="#e8d810" />
+    <rect x="568" y="76" width="6" height="6" fill="#2e8b57" /><rect x="575" y="76" width="6" height="6" fill="#e8d810" /><rect x="582" y="76" width="6" height="6" fill="#2e8b57" />
+    <rect x="568" y="83" width="6" height="6" fill="#e8d810" /><rect x="575" y="83" width="6" height="6" fill="#2e8b57" /><rect x="582" y="83" width="6" height="6" fill="#e8d810" />
+
+    <!-- C3 : [[1,1,0],[0,0,1],[1,0,1]]  at x=589 -->
+    <rect x="590" y="69" width="6" height="6" fill="#2e8b57" /><rect x="597" y="69" width="6" height="6" fill="#2e8b57" /><rect x="604" y="69" width="6" height="6" fill="#e8d810" />
+    <rect x="590" y="76" width="6" height="6" fill="#e8d810" /><rect x="597" y="76" width="6" height="6" fill="#e8d810" /><rect x="604" y="76" width="6" height="6" fill="#2e8b57" />
+    <rect x="590" y="83" width="6" height="6" fill="#2e8b57" /><rect x="597" y="83" width="6" height="6" fill="#e8d810" /><rect x="604" y="83" width="6" height="6" fill="#2e8b57" />
+
+    <!-- C4 : [[0,1,1],[1,0,0],[0,1,0]]  at x=611 -->
+    <rect x="612" y="69" width="6" height="6" fill="#e8d810" /><rect x="619" y="69" width="6" height="6" fill="#2e8b57" /><rect x="626" y="69" width="6" height="6" fill="#2e8b57" />
+    <rect x="612" y="76" width="6" height="6" fill="#2e8b57" /><rect x="619" y="76" width="6" height="6" fill="#e8d810" /><rect x="626" y="76" width="6" height="6" fill="#e8d810" />
+    <rect x="612" y="83" width="6" height="6" fill="#e8d810" /><rect x="619" y="83" width="6" height="6" fill="#2e8b57" /><rect x="626" y="83" width="6" height="6" fill="#e8d810" />
+
+    <!-- C5 : [[1,0,0],[0,1,1],[1,1,0]]  at x=633 -->
+    <rect x="634" y="69" width="6" height="6" fill="#2e8b57" /><rect x="641" y="69" width="6" height="6" fill="#e8d810" /><rect x="648" y="69" width="6" height="6" fill="#e8d810" />
+    <rect x="634" y="76" width="6" height="6" fill="#e8d810" /><rect x="641" y="76" width="6" height="6" fill="#2e8b57" /><rect x="648" y="76" width="6" height="6" fill="#2e8b57" />
+    <rect x="634" y="83" width="6" height="6" fill="#2e8b57" /><rect x="641" y="83" width="6" height="6" fill="#2e8b57" /><rect x="648" y="83" width="6" height="6" fill="#e8d810" />
+
+    <!-- C6 : [[0,0,1],[1,1,0],[1,0,0]]  at x=655 -->
+    <rect x="656" y="69" width="6" height="6" fill="#e8d810" /><rect x="663" y="69" width="6" height="6" fill="#e8d810" /><rect x="670" y="69" width="6" height="6" fill="#2e8b57" />
+    <rect x="656" y="76" width="6" height="6" fill="#2e8b57" /><rect x="663" y="76" width="6" height="6" fill="#2e8b57" /><rect x="670" y="76" width="6" height="6" fill="#e8d810" />
+    <rect x="656" y="83" width="6" height="6" fill="#2e8b57" /><rect x="663" y="83" width="6" height="6" fill="#e8d810" /><rect x="670" y="83" width="6" height="6" fill="#e8d810" />
+
+    <!-- C7 : [[1,1,1],[0,0,0],[1,0,1]]  at x=677 -->
+    <rect x="678" y="69" width="6" height="6" fill="#2e8b57" /><rect x="685" y="69" width="6" height="6" fill="#2e8b57" /><rect x="692" y="69" width="6" height="6" fill="#2e8b57" />
+    <rect x="678" y="76" width="6" height="6" fill="#e8d810" /><rect x="685" y="76" width="6" height="6" fill="#e8d810" /><rect x="692" y="76" width="6" height="6" fill="#e8d810" />
+    <rect x="678" y="83" width="6" height="6" fill="#2e8b57" /><rect x="685" y="83" width="6" height="6" fill="#e8d810" /><rect x="692" y="83" width="6" height="6" fill="#2e8b57" />
+
+    <!-- C8 : [[0,1,0],[1,0,1],[0,1,0]]  checker at x=699 -->
+    <rect x="700" y="69" width="6" height="6" fill="#e8d810" /><rect x="707" y="69" width="6" height="6" fill="#2e8b57" /><rect x="714" y="69" width="6" height="6" fill="#e8d810" />
+    <rect x="700" y="76" width="6" height="6" fill="#2e8b57" /><rect x="707" y="76" width="6" height="6" fill="#e8d810" /><rect x="714" y="76" width="6" height="6" fill="#2e8b57" />
+    <rect x="700" y="83" width="6" height="6" fill="#e8d810" /><rect x="707" y="83" width="6" height="6" fill="#2e8b57" /><rect x="714" y="83" width="6" height="6" fill="#e8d810" />
+
+    <!-- C9 : [[1,1,0],[0,1,1],[1,0,1]]  at x=721 -->
+    <rect x="722" y="69" width="6" height="6" fill="#2e8b57" /><rect x="729" y="69" width="6" height="6" fill="#2e8b57" /><rect x="736" y="69" width="6" height="6" fill="#e8d810" />
+    <rect x="722" y="76" width="6" height="6" fill="#e8d810" /><rect x="729" y="76" width="6" height="6" fill="#2e8b57" /><rect x="736" y="76" width="6" height="6" fill="#2e8b57" />
+    <rect x="722" y="83" width="6" height="6" fill="#2e8b57" /><rect x="729" y="83" width="6" height="6" fill="#e8d810" /><rect x="736" y="83" width="6" height="6" fill="#2e8b57" />
+
+    <!-- C10 : [[1,0,1],[1,0,0],[0,1,1]]  at x=743 -->
+    <rect x="744" y="69" width="6" height="6" fill="#2e8b57" /><rect x="751" y="69" width="6" height="6" fill="#e8d810" /><rect x="758" y="69" width="6" height="6" fill="#2e8b57" />
+    <rect x="744" y="76" width="6" height="6" fill="#2e8b57" /><rect x="751" y="76" width="6" height="6" fill="#e8d810" /><rect x="758" y="76" width="6" height="6" fill="#e8d810" />
+    <rect x="744" y="83" width="6" height="6" fill="#e8d810" /><rect x="751" y="83" width="6" height="6" fill="#2e8b57" /><rect x="758" y="83" width="6" height="6" fill="#2e8b57" />
+
+    <rect x="545" y="68" width="220" height="22" fill="none" stroke="#888" stroke-width="1.2" />
+    <line x1="567" y1="68" x2="567" y2="90" stroke="#888" stroke-width="1" />
+    <line x1="589" y1="68" x2="589" y2="90" stroke="#888" stroke-width="1" />
+    <line x1="611" y1="68" x2="611" y2="90" stroke="#888" stroke-width="1" />
+    <line x1="633" y1="68" x2="633" y2="90" stroke="#888" stroke-width="1" />
+    <line x1="655" y1="68" x2="655" y2="90" stroke="#888" stroke-width="1" />
+    <line x1="677" y1="68" x2="677" y2="90" stroke="#888" stroke-width="1" />
+    <line x1="699" y1="68" x2="699" y2="90" stroke="#888" stroke-width="1" />
+    <line x1="721" y1="68" x2="721" y2="90" stroke="#888" stroke-width="1" />
+    <line x1="743" y1="68" x2="743" y2="90" stroke="#888" stroke-width="1" />
+
+    <line x1="580" y1="101" x2="580" y2="125" stroke="#555" stroke-width="1.2"
+          marker-end="url(#arrowSub)" />
+    <text x="655" y="117" font-size="11" font-weight="bold" text-anchor="middle" fill="#555">Pre-train with Forward</text>
+
+    <!-- Bottom chunk : 10 cells all green tokens , y=136..158 -->
+    <rect x="546" y="137" width="6" height="6" fill="#2e8b57" /><rect x="553" y="137" width="6" height="6" fill="#2e8b57" /><rect x="560" y="137" width="6" height="6" fill="#2e8b57" />
+    <rect x="546" y="144" width="6" height="6" fill="#2e8b57" /><rect x="553" y="144" width="6" height="6" fill="#2e8b57" /><rect x="560" y="144" width="6" height="6" fill="#2e8b57" />
+    <rect x="546" y="151" width="6" height="6" fill="#2e8b57" /><rect x="553" y="151" width="6" height="6" fill="#2e8b57" /><rect x="560" y="151" width="6" height="6" fill="#2e8b57" />
+
+    <rect x="568" y="137" width="6" height="6" fill="#2e8b57" /><rect x="575" y="137" width="6" height="6" fill="#2e8b57" /><rect x="582" y="137" width="6" height="6" fill="#2e8b57" />
+    <rect x="568" y="144" width="6" height="6" fill="#2e8b57" /><rect x="575" y="144" width="6" height="6" fill="#2e8b57" /><rect x="582" y="144" width="6" height="6" fill="#2e8b57" />
+    <rect x="568" y="151" width="6" height="6" fill="#2e8b57" /><rect x="575" y="151" width="6" height="6" fill="#2e8b57" /><rect x="582" y="151" width="6" height="6" fill="#2e8b57" />
+
+    <rect x="590" y="137" width="6" height="6" fill="#2e8b57" /><rect x="597" y="137" width="6" height="6" fill="#2e8b57" /><rect x="604" y="137" width="6" height="6" fill="#2e8b57" />
+    <rect x="590" y="144" width="6" height="6" fill="#2e8b57" /><rect x="597" y="144" width="6" height="6" fill="#2e8b57" /><rect x="604" y="144" width="6" height="6" fill="#2e8b57" />
+    <rect x="590" y="151" width="6" height="6" fill="#2e8b57" /><rect x="597" y="151" width="6" height="6" fill="#2e8b57" /><rect x="604" y="151" width="6" height="6" fill="#2e8b57" />
+
+    <rect x="612" y="137" width="6" height="6" fill="#2e8b57" /><rect x="619" y="137" width="6" height="6" fill="#2e8b57" /><rect x="626" y="137" width="6" height="6" fill="#2e8b57" />
+    <rect x="612" y="144" width="6" height="6" fill="#2e8b57" /><rect x="619" y="144" width="6" height="6" fill="#2e8b57" /><rect x="626" y="144" width="6" height="6" fill="#2e8b57" />
+    <rect x="612" y="151" width="6" height="6" fill="#2e8b57" /><rect x="619" y="151" width="6" height="6" fill="#2e8b57" /><rect x="626" y="151" width="6" height="6" fill="#2e8b57" />
+
+    <rect x="634" y="137" width="6" height="6" fill="#2e8b57" /><rect x="641" y="137" width="6" height="6" fill="#2e8b57" /><rect x="648" y="137" width="6" height="6" fill="#2e8b57" />
+    <rect x="634" y="144" width="6" height="6" fill="#2e8b57" /><rect x="641" y="144" width="6" height="6" fill="#2e8b57" /><rect x="648" y="144" width="6" height="6" fill="#2e8b57" />
+    <rect x="634" y="151" width="6" height="6" fill="#2e8b57" /><rect x="641" y="151" width="6" height="6" fill="#2e8b57" /><rect x="648" y="151" width="6" height="6" fill="#2e8b57" />
+
+    <rect x="656" y="137" width="6" height="6" fill="#2e8b57" /><rect x="663" y="137" width="6" height="6" fill="#2e8b57" /><rect x="670" y="137" width="6" height="6" fill="#2e8b57" />
+    <rect x="656" y="144" width="6" height="6" fill="#2e8b57" /><rect x="663" y="144" width="6" height="6" fill="#2e8b57" /><rect x="670" y="144" width="6" height="6" fill="#2e8b57" />
+    <rect x="656" y="151" width="6" height="6" fill="#2e8b57" /><rect x="663" y="151" width="6" height="6" fill="#2e8b57" /><rect x="670" y="151" width="6" height="6" fill="#2e8b57" />
+
+    <rect x="678" y="137" width="6" height="6" fill="#2e8b57" /><rect x="685" y="137" width="6" height="6" fill="#2e8b57" /><rect x="692" y="137" width="6" height="6" fill="#2e8b57" />
+    <rect x="678" y="144" width="6" height="6" fill="#2e8b57" /><rect x="685" y="144" width="6" height="6" fill="#2e8b57" /><rect x="692" y="144" width="6" height="6" fill="#2e8b57" />
+    <rect x="678" y="151" width="6" height="6" fill="#2e8b57" /><rect x="685" y="151" width="6" height="6" fill="#2e8b57" /><rect x="692" y="151" width="6" height="6" fill="#2e8b57" />
+
+    <rect x="700" y="137" width="6" height="6" fill="#2e8b57" /><rect x="707" y="137" width="6" height="6" fill="#2e8b57" /><rect x="714" y="137" width="6" height="6" fill="#2e8b57" />
+    <rect x="700" y="144" width="6" height="6" fill="#2e8b57" /><rect x="707" y="144" width="6" height="6" fill="#2e8b57" /><rect x="714" y="144" width="6" height="6" fill="#2e8b57" />
+    <rect x="700" y="151" width="6" height="6" fill="#2e8b57" /><rect x="707" y="151" width="6" height="6" fill="#2e8b57" /><rect x="714" y="151" width="6" height="6" fill="#2e8b57" />
+
+    <rect x="722" y="137" width="6" height="6" fill="#2e8b57" /><rect x="729" y="137" width="6" height="6" fill="#2e8b57" /><rect x="736" y="137" width="6" height="6" fill="#2e8b57" />
+    <rect x="722" y="144" width="6" height="6" fill="#2e8b57" /><rect x="729" y="144" width="6" height="6" fill="#2e8b57" /><rect x="736" y="144" width="6" height="6" fill="#2e8b57" />
+    <rect x="722" y="151" width="6" height="6" fill="#2e8b57" /><rect x="729" y="151" width="6" height="6" fill="#2e8b57" /><rect x="736" y="151" width="6" height="6" fill="#2e8b57" />
+
+    <rect x="744" y="137" width="6" height="6" fill="#2e8b57" /><rect x="751" y="137" width="6" height="6" fill="#2e8b57" /><rect x="758" y="137" width="6" height="6" fill="#2e8b57" />
+    <rect x="744" y="144" width="6" height="6" fill="#2e8b57" /><rect x="751" y="144" width="6" height="6" fill="#2e8b57" /><rect x="758" y="144" width="6" height="6" fill="#2e8b57" />
+    <rect x="744" y="151" width="6" height="6" fill="#2e8b57" /><rect x="751" y="151" width="6" height="6" fill="#2e8b57" /><rect x="758" y="151" width="6" height="6" fill="#2e8b57" />
+
+    <rect x="545" y="136" width="220" height="22" fill="none" stroke="#888" stroke-width="1.2" />
+    <line x1="567" y1="136" x2="567" y2="158" stroke="#888" stroke-width="1" />
+    <line x1="589" y1="136" x2="589" y2="158" stroke="#888" stroke-width="1" />
+    <line x1="611" y1="136" x2="611" y2="158" stroke="#888" stroke-width="1" />
+    <line x1="633" y1="136" x2="633" y2="158" stroke="#888" stroke-width="1" />
+    <line x1="655" y1="136" x2="655" y2="158" stroke="#888" stroke-width="1" />
+    <line x1="677" y1="136" x2="677" y2="158" stroke="#888" stroke-width="1" />
+    <line x1="699" y1="136" x2="699" y2="158" stroke="#888" stroke-width="1" />
+    <line x1="721" y1="136" x2="721" y2="158" stroke="#888" stroke-width="1" />
+    <line x1="743" y1="136" x2="743" y2="158" stroke="#888" stroke-width="1" />
+  </g>
+
+  <!-- =========================================================== -->
+  <!-- (2,1)  Panel (b) — Fine-tuning Free   250×160               -->
+  <!-- Structured RTC-style mask in top chunk , same pre-trained    -->
+  <!-- model recovers it without fine-tuning.                       -->
+  <!-- =========================================================== -->
+  <g id="panel-b">
+    <rect x="10" y="180" width="250" height="160" rx="8" fill="#e4f5e0"
+          stroke="#aaa" stroke-width="1.2" />
+    <text x="24" y="200" font-size="15" font-weight="bold"
+          fill="#333">(b) Fine-tuning Free</text>
+
+    <text x="135" y="228" font-size="14" font-weight="bold"
+          text-anchor="middle" fill="#333">Inpainting as a Special Pattern</text>
+
+    <!-- Top chunk : 10 cells 22×22 , structured RTC pattern , x=25..245 y=238..260 -->
+    <!-- Tokens 6×6 at offsets (1,8,15) within cell.                 -->
+
+    <!-- C1 , C2 : prefix — all 9 tokens green , at x=25, 47 -->
+    <rect x="26" y="239" width="6" height="6" fill="#2e8b57" /><rect x="33" y="239" width="6" height="6" fill="#2e8b57" /><rect x="40" y="239" width="6" height="6" fill="#2e8b57" />
+    <rect x="26" y="246" width="6" height="6" fill="#2e8b57" /><rect x="33" y="246" width="6" height="6" fill="#2e8b57" /><rect x="40" y="246" width="6" height="6" fill="#2e8b57" />
+    <rect x="26" y="253" width="6" height="6" fill="#2e8b57" /><rect x="33" y="253" width="6" height="6" fill="#2e8b57" /><rect x="40" y="253" width="6" height="6" fill="#2e8b57" />
+
+    <rect x="48" y="239" width="6" height="6" fill="#2e8b57" /><rect x="55" y="239" width="6" height="6" fill="#2e8b57" /><rect x="62" y="239" width="6" height="6" fill="#2e8b57" />
+    <rect x="48" y="246" width="6" height="6" fill="#2e8b57" /><rect x="55" y="246" width="6" height="6" fill="#2e8b57" /><rect x="62" y="246" width="6" height="6" fill="#2e8b57" />
+    <rect x="48" y="253" width="6" height="6" fill="#2e8b57" /><rect x="55" y="253" width="6" height="6" fill="#2e8b57" /><rect x="62" y="253" width="6" height="6" fill="#2e8b57" />
+
+    <!-- C3 : 8G 1Y  (random — Y at (1,2)) , x=69 -->
+    <rect x="70" y="239" width="6" height="6" fill="#2e8b57" /><rect x="77" y="239" width="6" height="6" fill="#2e8b57" /><rect x="84" y="239" width="6" height="6" fill="#2e8b57" />
+    <rect x="70" y="246" width="6" height="6" fill="#2e8b57" /><rect x="77" y="246" width="6" height="6" fill="#2e8b57" /><rect x="84" y="246" width="6" height="6" fill="#e8d810" />
+    <rect x="70" y="253" width="6" height="6" fill="#2e8b57" /><rect x="77" y="253" width="6" height="6" fill="#2e8b57" /><rect x="84" y="253" width="6" height="6" fill="#2e8b57" />
+
+    <!-- C4 : 6G 3Y  (random — Y at (0,1),(1,2),(2,0)) , x=91 -->
+    <rect x="92" y="239" width="6" height="6" fill="#2e8b57" /><rect x="99" y="239" width="6" height="6" fill="#e8d810" /><rect x="106" y="239" width="6" height="6" fill="#2e8b57" />
+    <rect x="92" y="246" width="6" height="6" fill="#2e8b57" /><rect x="99" y="246" width="6" height="6" fill="#2e8b57" /><rect x="106" y="246" width="6" height="6" fill="#e8d810" />
+    <rect x="92" y="253" width="6" height="6" fill="#e8d810" /><rect x="99" y="253" width="6" height="6" fill="#2e8b57" /><rect x="106" y="253" width="6" height="6" fill="#2e8b57" />
+
+    <!-- C5 : 3G 6Y  (random — G at (0,1),(1,2),(2,0)) , x=113 -->
+    <rect x="114" y="239" width="6" height="6" fill="#e8d810" /><rect x="121" y="239" width="6" height="6" fill="#2e8b57" /><rect x="128" y="239" width="6" height="6" fill="#e8d810" />
+    <rect x="114" y="246" width="6" height="6" fill="#e8d810" /><rect x="121" y="246" width="6" height="6" fill="#e8d810" /><rect x="128" y="246" width="6" height="6" fill="#2e8b57" />
+    <rect x="114" y="253" width="6" height="6" fill="#2e8b57" /><rect x="121" y="253" width="6" height="6" fill="#e8d810" /><rect x="128" y="253" width="6" height="6" fill="#e8d810" />
+
+    <!-- C6 : 1G 8Y  (random — only G at (0,2)) , x=135 -->
+    <rect x="136" y="239" width="6" height="6" fill="#e8d810" /><rect x="143" y="239" width="6" height="6" fill="#e8d810" /><rect x="150" y="239" width="6" height="6" fill="#2e8b57" />
+    <rect x="136" y="246" width="6" height="6" fill="#e8d810" /><rect x="143" y="246" width="6" height="6" fill="#e8d810" /><rect x="150" y="246" width="6" height="6" fill="#e8d810" />
+    <rect x="136" y="253" width="6" height="6" fill="#e8d810" /><rect x="143" y="253" width="6" height="6" fill="#e8d810" /><rect x="150" y="253" width="6" height="6" fill="#e8d810" />
+
+    <!-- C7..C10 : future — all 9 tokens yellow  at x=157,179,201,223 -->
+    <rect x="158" y="239" width="6" height="6" fill="#e8d810" /><rect x="165" y="239" width="6" height="6" fill="#e8d810" /><rect x="172" y="239" width="6" height="6" fill="#e8d810" />
+    <rect x="158" y="246" width="6" height="6" fill="#e8d810" /><rect x="165" y="246" width="6" height="6" fill="#e8d810" /><rect x="172" y="246" width="6" height="6" fill="#e8d810" />
+    <rect x="158" y="253" width="6" height="6" fill="#e8d810" /><rect x="165" y="253" width="6" height="6" fill="#e8d810" /><rect x="172" y="253" width="6" height="6" fill="#e8d810" />
+
+    <rect x="180" y="239" width="6" height="6" fill="#e8d810" /><rect x="187" y="239" width="6" height="6" fill="#e8d810" /><rect x="194" y="239" width="6" height="6" fill="#e8d810" />
+    <rect x="180" y="246" width="6" height="6" fill="#e8d810" /><rect x="187" y="246" width="6" height="6" fill="#e8d810" /><rect x="194" y="246" width="6" height="6" fill="#e8d810" />
+    <rect x="180" y="253" width="6" height="6" fill="#e8d810" /><rect x="187" y="253" width="6" height="6" fill="#e8d810" /><rect x="194" y="253" width="6" height="6" fill="#e8d810" />
+
+    <rect x="202" y="239" width="6" height="6" fill="#e8d810" /><rect x="209" y="239" width="6" height="6" fill="#e8d810" /><rect x="216" y="239" width="6" height="6" fill="#e8d810" />
+    <rect x="202" y="246" width="6" height="6" fill="#e8d810" /><rect x="209" y="246" width="6" height="6" fill="#e8d810" /><rect x="216" y="246" width="6" height="6" fill="#e8d810" />
+    <rect x="202" y="253" width="6" height="6" fill="#e8d810" /><rect x="209" y="253" width="6" height="6" fill="#e8d810" /><rect x="216" y="253" width="6" height="6" fill="#e8d810" />
+
+    <rect x="224" y="239" width="6" height="6" fill="#e8d810" /><rect x="231" y="239" width="6" height="6" fill="#e8d810" /><rect x="238" y="239" width="6" height="6" fill="#e8d810" />
+    <rect x="224" y="246" width="6" height="6" fill="#e8d810" /><rect x="231" y="246" width="6" height="6" fill="#e8d810" /><rect x="238" y="246" width="6" height="6" fill="#e8d810" />
+    <rect x="224" y="253" width="6" height="6" fill="#e8d810" /><rect x="231" y="253" width="6" height="6" fill="#e8d810" /><rect x="238" y="253" width="6" height="6" fill="#e8d810" />
+
+    <rect x="25" y="238" width="220" height="22" fill="none" stroke="#888" stroke-width="1.2" />
+    <line x1="47" y1="238" x2="47" y2="260" stroke="#888" stroke-width="1" />
+    <line x1="69" y1="238" x2="69" y2="260" stroke="#888" stroke-width="1" />
+    <line x1="91" y1="238" x2="91" y2="260" stroke="#888" stroke-width="1" />
+    <line x1="113" y1="238" x2="113" y2="260" stroke="#888" stroke-width="1" />
+    <line x1="135" y1="238" x2="135" y2="260" stroke="#888" stroke-width="1" />
+    <line x1="157" y1="238" x2="157" y2="260" stroke="#888" stroke-width="1" />
+    <line x1="179" y1="238" x2="179" y2="260" stroke="#888" stroke-width="1" />
+    <line x1="201" y1="238" x2="201" y2="260" stroke="#888" stroke-width="1" />
+    <line x1="223" y1="238" x2="223" y2="260" stroke="#888" stroke-width="1" />
+
+    <line x1="60" y1="271" x2="60" y2="293" stroke="#555" stroke-width="1.2"
+          marker-end="url(#arrowSub)" />
+    <text x="135" y="287" font-size="11" font-weight="bold" text-anchor="middle" fill="#555">Inference with Forward</text>
+
+    <!-- Bottom chunk : 10 cells all green tokens , y=304..326 -->
+    <rect x="26" y="305" width="6" height="6" fill="#2e8b57" /><rect x="33" y="305" width="6" height="6" fill="#2e8b57" /><rect x="40" y="305" width="6" height="6" fill="#2e8b57" />
+    <rect x="26" y="312" width="6" height="6" fill="#2e8b57" /><rect x="33" y="312" width="6" height="6" fill="#2e8b57" /><rect x="40" y="312" width="6" height="6" fill="#2e8b57" />
+    <rect x="26" y="319" width="6" height="6" fill="#2e8b57" /><rect x="33" y="319" width="6" height="6" fill="#2e8b57" /><rect x="40" y="319" width="6" height="6" fill="#2e8b57" />
+
+    <rect x="48" y="305" width="6" height="6" fill="#2e8b57" /><rect x="55" y="305" width="6" height="6" fill="#2e8b57" /><rect x="62" y="305" width="6" height="6" fill="#2e8b57" />
+    <rect x="48" y="312" width="6" height="6" fill="#2e8b57" /><rect x="55" y="312" width="6" height="6" fill="#2e8b57" /><rect x="62" y="312" width="6" height="6" fill="#2e8b57" />
+    <rect x="48" y="319" width="6" height="6" fill="#2e8b57" /><rect x="55" y="319" width="6" height="6" fill="#2e8b57" /><rect x="62" y="319" width="6" height="6" fill="#2e8b57" />
+
+    <rect x="70" y="305" width="6" height="6" fill="#2e8b57" /><rect x="77" y="305" width="6" height="6" fill="#2e8b57" /><rect x="84" y="305" width="6" height="6" fill="#2e8b57" />
+    <rect x="70" y="312" width="6" height="6" fill="#2e8b57" /><rect x="77" y="312" width="6" height="6" fill="#2e8b57" /><rect x="84" y="312" width="6" height="6" fill="#2e8b57" />
+    <rect x="70" y="319" width="6" height="6" fill="#2e8b57" /><rect x="77" y="319" width="6" height="6" fill="#2e8b57" /><rect x="84" y="319" width="6" height="6" fill="#2e8b57" />
+
+    <rect x="92" y="305" width="6" height="6" fill="#2e8b57" /><rect x="99" y="305" width="6" height="6" fill="#2e8b57" /><rect x="106" y="305" width="6" height="6" fill="#2e8b57" />
+    <rect x="92" y="312" width="6" height="6" fill="#2e8b57" /><rect x="99" y="312" width="6" height="6" fill="#2e8b57" /><rect x="106" y="312" width="6" height="6" fill="#2e8b57" />
+    <rect x="92" y="319" width="6" height="6" fill="#2e8b57" /><rect x="99" y="319" width="6" height="6" fill="#2e8b57" /><rect x="106" y="319" width="6" height="6" fill="#2e8b57" />
+
+    <rect x="114" y="305" width="6" height="6" fill="#2e8b57" /><rect x="121" y="305" width="6" height="6" fill="#2e8b57" /><rect x="128" y="305" width="6" height="6" fill="#2e8b57" />
+    <rect x="114" y="312" width="6" height="6" fill="#2e8b57" /><rect x="121" y="312" width="6" height="6" fill="#2e8b57" /><rect x="128" y="312" width="6" height="6" fill="#2e8b57" />
+    <rect x="114" y="319" width="6" height="6" fill="#2e8b57" /><rect x="121" y="319" width="6" height="6" fill="#2e8b57" /><rect x="128" y="319" width="6" height="6" fill="#2e8b57" />
+
+    <rect x="136" y="305" width="6" height="6" fill="#2e8b57" /><rect x="143" y="305" width="6" height="6" fill="#2e8b57" /><rect x="150" y="305" width="6" height="6" fill="#2e8b57" />
+    <rect x="136" y="312" width="6" height="6" fill="#2e8b57" /><rect x="143" y="312" width="6" height="6" fill="#2e8b57" /><rect x="150" y="312" width="6" height="6" fill="#2e8b57" />
+    <rect x="136" y="319" width="6" height="6" fill="#2e8b57" /><rect x="143" y="319" width="6" height="6" fill="#2e8b57" /><rect x="150" y="319" width="6" height="6" fill="#2e8b57" />
+
+    <!-- C7 : [[1,0,0],[0,1,1],[1,0,1]]  random mask  at x=157 -->
+    <rect x="158" y="305" width="6" height="6" fill="#2e8b57" /><rect x="165" y="305" width="6" height="6" fill="#e8d810" /><rect x="172" y="305" width="6" height="6" fill="#e8d810" />
+    <rect x="158" y="312" width="6" height="6" fill="#e8d810" /><rect x="165" y="312" width="6" height="6" fill="#2e8b57" /><rect x="172" y="312" width="6" height="6" fill="#2e8b57" />
+    <rect x="158" y="319" width="6" height="6" fill="#2e8b57" /><rect x="165" y="319" width="6" height="6" fill="#e8d810" /><rect x="172" y="319" width="6" height="6" fill="#2e8b57" />
+
+    <!-- C8 : [[0,1,1],[1,0,0],[0,1,0]]  random mask  at x=179 -->
+    <rect x="180" y="305" width="6" height="6" fill="#e8d810" /><rect x="187" y="305" width="6" height="6" fill="#2e8b57" /><rect x="194" y="305" width="6" height="6" fill="#2e8b57" />
+    <rect x="180" y="312" width="6" height="6" fill="#2e8b57" /><rect x="187" y="312" width="6" height="6" fill="#e8d810" /><rect x="194" y="312" width="6" height="6" fill="#e8d810" />
+    <rect x="180" y="319" width="6" height="6" fill="#e8d810" /><rect x="187" y="319" width="6" height="6" fill="#2e8b57" /><rect x="194" y="319" width="6" height="6" fill="#e8d810" />
+
+    <!-- C9 : [[1,0,1],[0,0,1],[1,1,0]]  random mask  at x=201 -->
+    <rect x="202" y="305" width="6" height="6" fill="#2e8b57" /><rect x="209" y="305" width="6" height="6" fill="#e8d810" /><rect x="216" y="305" width="6" height="6" fill="#2e8b57" />
+    <rect x="202" y="312" width="6" height="6" fill="#e8d810" /><rect x="209" y="312" width="6" height="6" fill="#e8d810" /><rect x="216" y="312" width="6" height="6" fill="#2e8b57" />
+    <rect x="202" y="319" width="6" height="6" fill="#2e8b57" /><rect x="209" y="319" width="6" height="6" fill="#2e8b57" /><rect x="216" y="319" width="6" height="6" fill="#e8d810" />
+
+    <!-- C10 : [[0,1,0],[1,1,0],[0,0,1]]  random mask  at x=223 -->
+    <rect x="224" y="305" width="6" height="6" fill="#e8d810" /><rect x="231" y="305" width="6" height="6" fill="#2e8b57" /><rect x="238" y="305" width="6" height="6" fill="#e8d810" />
+    <rect x="224" y="312" width="6" height="6" fill="#2e8b57" /><rect x="231" y="312" width="6" height="6" fill="#2e8b57" /><rect x="238" y="312" width="6" height="6" fill="#e8d810" />
+    <rect x="224" y="319" width="6" height="6" fill="#e8d810" /><rect x="231" y="319" width="6" height="6" fill="#e8d810" /><rect x="238" y="319" width="6" height="6" fill="#2e8b57" />
+
+    <rect x="25" y="304" width="220" height="22" fill="none" stroke="#888" stroke-width="1.2" />
+    <line x1="47" y1="304" x2="47" y2="326" stroke="#888" stroke-width="1" />
+    <line x1="69" y1="304" x2="69" y2="326" stroke="#888" stroke-width="1" />
+    <line x1="91" y1="304" x2="91" y2="326" stroke="#888" stroke-width="1" />
+    <line x1="113" y1="304" x2="113" y2="326" stroke="#888" stroke-width="1" />
+    <line x1="135" y1="304" x2="135" y2="326" stroke="#888" stroke-width="1" />
+    <line x1="157" y1="304" x2="157" y2="326" stroke="#888" stroke-width="1" />
+    <line x1="179" y1="304" x2="179" y2="326" stroke="#888" stroke-width="1" />
+    <line x1="201" y1="304" x2="201" y2="326" stroke="#888" stroke-width="1" />
+    <line x1="223" y1="304" x2="223" y2="326" stroke="#888" stroke-width="1" />
+  </g>
+
+  <!-- =========================================================== -->
+  <!-- (2,2)  Panel (c)  — Natural Guidance   250×160              -->
+  <!-- =========================================================== -->
+  <g id="panel-c">
+    <rect x="270" y="180" width="250" height="160" rx="8" fill="#e4f5e0"
+          stroke="#aaa" stroke-width="1.2" />
+    <text x="284" y="200" font-size="15" font-weight="bold" fill="#333">(c) Natural Guidance</text>
+
+    <line x1="300" y1="318" x2="300" y2="218" stroke="#333" stroke-width="1.2"
+          marker-end="url(#axisArrow)" />
+    <line x1="300" y1="318" x2="505" y2="318" stroke="#333" stroke-width="1.2"
+          marker-end="url(#axisArrow)" />
+
+    <text x="290" y="268" font-size="11" font-weight="bold" fill="#333"
+          text-anchor="middle" transform="rotate(-90, 290, 268)"># Unmasked Tokens</text>
+    <text x="402" y="336" font-size="12" font-weight="bold" fill="#333"
+          text-anchor="middle">Action Index</text>
+
+    <!-- Two gray dashed region boundaries ; second one shortened so it
+         doesn't cut through the equation annotation.                    -->
+    <line x1="360" y1="228" x2="360" y2="318" stroke="#888"
+          stroke-width="1" stroke-dasharray="4,3" />
+    <line x1="440" y1="270" x2="440" y2="318" stroke="#888"
+          stroke-width="1" stroke-dasharray="4,3" />
+
+    <!-- Concise definition of the guidance weight -->
+    <text x="445" y="240" font-size="15" font-style="italic"
+          text-anchor="middle" fill="#333">W<tspan dy="3" font-size="11">i</tspan><tspan dy="-3"> = Unmasked</tspan><tspan dy="3" font-size="11">i</tspan></text>
+
+    <!-- Descending staircase : 9 in first region , token-count decreases
+         over the intermediate cells (8 → 6 → 3 → 1) , 0 in last region.   -->
+    <path d="M 310,232 L 360,232
+             L 360,242 L 380,242
+             L 380,261 L 400,261
+             L 400,289 L 420,289
+             L 420,308 L 440,308
+             L 440,318 L 500,318"
+          fill="none" stroke="#2e8b57" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+
+    <!-- dots at each step -->
+    <circle cx="380" cy="242" r="2.2" fill="#2e8b57" />
+    <circle cx="400" cy="261" r="2.2" fill="#2e8b57" />
+    <circle cx="420" cy="289" r="2.2" fill="#2e8b57" />
+    <circle cx="440" cy="308" r="2.2" fill="#2e8b57" />
+
+  </g>
+
+  <!-- =========================================================== -->
+  <!-- (2,3)  Panel (d)  — Lower Inference Cost   250×160          -->
+  <!-- =========================================================== -->
+  <g id="panel-d">
+    <rect x="530" y="180" width="250" height="160" rx="8" fill="#e4f5e0"
+          stroke="#aaa" stroke-width="1.2" />
+    <text x="544" y="200" font-size="15" font-weight="bold" fill="#333">(d) Lower Inference Cost</text>
+
+    <line x1="565" y1="318" x2="565" y2="220" stroke="#333" stroke-width="1.2"
+          marker-end="url(#axisArrow)" />
+    <line x1="565" y1="318" x2="770" y2="318" stroke="#333" stroke-width="1.2" />
+
+    <text x="558" y="269" font-size="12" font-weight="bold" fill="#333"
+          text-anchor="middle" transform="rotate(-90, 558, 269)">Denoising Time</text>
+
+    <!-- Original bar = 1.0 (gray) ; Discrete RTC bar = 0.4 (green) -->
+    <rect x="600" y="240" width="50" height="78" fill="#a0a8a0" rx="2" />
+    <rect x="695" y="287" width="50" height="31" fill="#2e8b57" rx="2" />
+
+    <text x="625" y="334" font-size="12" font-weight="bold" fill="#333"
+          text-anchor="middle">Original</text>
+    <text x="720" y="334" font-size="12" font-weight="bold" fill="#333"
+          text-anchor="middle">Discrete RTC</text>
+
+    <text x="625" y="235" font-size="14" font-weight="bold" fill="#333"
+          text-anchor="middle">1&#215;</text>
+    <text x="720" y="282" font-size="14" font-weight="bold" fill="#333"
+          text-anchor="middle">~0.4&#215;</text>
+
+  </g>
+</svg>

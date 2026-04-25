@@ -1,685 +1,1252 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
-  <meta charset="utf-8">
-  <meta name="description"
-        content="Discrete Diffusion Policies are Natural Asynchronous Executors for real-time robot control.">
-  <meta name="keywords" content="Discrete Diffusion, Real-Time Control, Asynchronous Execution, Robot Learning">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>DiscreteRTC: Discrete Diffusion Policies are Natural Asynchronous Executors</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DiscreteRTC | Discrete Diffusion Policies are Natural Asynchronous Executors</title>
 
-  <link href="https://fonts.googleapis.com/css?family=Google+Sans|Noto+Sans|Castoro"
-        rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="./static/css/bulma.min.css">
-  <link rel="stylesheet" href="./static/css/bulma-carousel.min.css">
-  <link rel="stylesheet" href="./static/css/bulma-slider.min.css">
-  <link rel="stylesheet" href="./static/css/fontawesome.all.min.css">
-  <link rel="stylesheet"
-        href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
-  <link rel="stylesheet" href="./static/css/index.css">
-  <link rel="icon" href="./static/images/favicon.svg">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.7.0/vanilla-tilt.min.js"></script>
 
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-  <script defer src="./static/js/fontawesome.all.min.js"></script>
-  <script src="./static/js/bulma-carousel.min.js"></script>
-  <script src="./static/js/bulma-slider.min.js"></script>
+    <!-- MathJax for LaTeX Support -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 
-  <style>
-    .viz-iframe {
-      width: 100%;
-      height: 320px;
-      border: none;
-      background: transparent;
-    }
-    .viz-container {
-      background: transparent;
-      padding: 0;
-      overflow: hidden;
-    }
-    .viz-label {
-      text-align: center;
-      font-family: 'Google Sans', sans-serif;
-      font-size: 0.95rem;
-      color: #666;
-      margin-bottom: 6px;
-      font-weight: 500;
-    }
-    .figure-img {
-      border-radius: 8px;
-    }
-    .key-point {
-      background: #f5f5f5;
-      border-radius: 8px;
-      padding: 1.2rem 1.5rem;
-      margin-bottom: 1rem;
-    }
-    .key-point strong {
-      color: #363636;
-    }
-    .placeholder-box {
-      background: #f9f9f9;
-      border: 2px dashed #d0d0d0;
-      border-radius: 12px;
-      padding: 3rem 2rem;
-      text-align: center;
-      color: #aaa;
-      font-family: 'Google Sans', sans-serif;
-    }
-    .placeholder-box .placeholder-icon {
-      font-size: 3rem;
-      margin-bottom: 1rem;
-      color: #ccc;
-    }
-    .placeholder-box .placeholder-text {
-      font-size: 1.1rem;
-      font-weight: 500;
-    }
-    .placeholder-box .placeholder-sub {
-      font-size: 0.9rem;
-      margin-top: 0.5rem;
-      color: #bbb;
-    }
-    .section-number {
-      color: #aaa;
-      font-weight: 400;
-    }
-  </style>
+    <style>
+        /* --- CSS VARIABLES & THEMES --- */
+        :root {
+            --bg-gradient: linear-gradient(135deg, #f4f3f5, #d6e0ea);
+            --text-main: #1a1a1a;
+            --text-secondary: #4a4a4a;
+            --glass-bg: rgba(255, 255, 255, 0.25);
+            --glass-border: rgba(0, 0, 0, 0.08);
+            --glass-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+            --accent: #6a11cb;
+            --accent-hover: #2575fc;
+            --code-bg: rgba(245, 245, 245, 0.8);
+            --good: #10b981;
+            --bad: #ef4444;
+        }
+
+        /* --- RESET & BASE --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+        }
+
+        body {
+            overflow-x: hidden;
+            background: var(--bg-gradient);
+            color: var(--text-main);
+            min-height: 100vh;
+        }
+
+        /* --- 3D BACKGROUND --- */
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        /* --- LAYOUT --- */
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 4rem 1.5rem;
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 2.5rem;
+            text-align: center;
+        }
+
+        /* --- GLASS COMPONENTS --- */
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            box-shadow: var(--glass-shadow);
+            padding: 2.5rem;
+            text-align: left;
+        }
+
+        /* --- HEADER SECTION --- */
+        .paper-header {
+            text-align: center;
+            margin-bottom: 1rem;
+        }
+
+        .paper-title {
+            font-size: 3rem;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
+            background: -webkit-linear-gradient(0deg, var(--text-main), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .paper-subtitle {
+            font-size: 1.15rem;
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+            font-weight: 500;
+        }
+
+        .author-list {
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .author-list a {
+            color: var(--text-main);
+            text-decoration: none;
+            margin: 0 0.5rem;
+            position: relative;
+        }
+
+        .author-list a:hover {
+            color: var(--accent);
+        }
+
+        .affiliations {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .link-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-main {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            color: var(--text-main);
+            padding: 0.8rem 1.5rem;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 600;
+            backdrop-filter: blur(4px);
+            transition: all 0.3s ease;
+        }
+
+        .btn-main:hover {
+            background: var(--accent);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(142, 45, 226, 0.3);
+            border-color: var(--accent);
+        }
+
+        /* --- TEASER --- */
+        .teaser-img {
+            width: 100%;
+            border-radius: 12px;
+            margin-top: 1rem;
+            border: 1px solid var(--glass-border);
+            background: white;
+        }
+
+        .teaser-caption {
+            color: var(--text-secondary);
+            margin-top: 1rem;
+            font-size: 0.95rem;
+            text-align: center;
+        }
+
+        /* Figure wrapper (for SVG/PDF). Padding gives breathing room around
+           tightly-cropped matplotlib SVGs; transparent borders blend with the
+           glass panel. */
+        .fig-wrap {
+            width: 100%;
+            border-radius: 12px;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            background: #ffffff;
+            margin: 1.75rem 0 0.75rem;
+            padding: 1.25rem 1.5rem;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+        }
+        .fig-wrap img,
+        .fig-wrap object {
+            width: 100%;
+            height: auto;
+            max-width: 100%;
+            display: block;
+            margin: 0 auto;
+        }
+        /* <object> doesn't get intrinsic dimensions until SVG loads; set per
+           figure via inline style on the wrapper using --ar (width/height). */
+        .fig-wrap object {
+            aspect-ratio: var(--ar, auto);
+        }
+        /* For very wide matplotlib SVGs that would shrink text too small at
+           1000px container width, allow horizontal scroll instead of crushing. */
+        .fig-wrap.wide {
+            overflow-x: auto;
+            padding: 1rem;
+        }
+        .fig-wrap.wide img {
+            min-width: 900px;
+            width: 100%;
+        }
+
+        /* Interactive viz iframe. viewBoxes: continuous 1050x300, discrete 1060x290.
+           We use 1050/310 to give a few px of vertical buffer for both. */
+        .viz-iframe {
+            width: 100%;
+            aspect-ratio: 1050 / 310;
+            border: none;
+            background: transparent;
+            display: block;
+        }
+        .viz-wrap {
+            width: 100%;
+            border-radius: 12px;
+            border: 1px solid var(--glass-border);
+            overflow: hidden;
+            background: rgba(255,255,255,0.55);
+            margin: 1.75rem 0;
+        }
+        .viz-label {
+            text-align: center;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            padding: 0.6rem;
+            background: rgba(255,255,255,0.55);
+            font-weight: 600;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        /* --- CONTENT SECTIONS --- */
+        h2 {
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+            color: var(--text-main);
+            border-bottom: 2px solid var(--accent);
+            display: inline-block;
+            padding-bottom: 0.3rem;
+        }
+
+        h3 {
+            font-size: 1.4rem;
+            margin-bottom: 0.8rem;
+            color: var(--text-main);
+            margin-top: 2rem;
+            font-weight: 600;
+        }
+
+        h4 {
+            font-size: 1.1rem;
+            margin-bottom: 0.6rem;
+            color: var(--accent);
+            margin-top: 1.5rem;
+            font-weight: 700;
+        }
+
+        p {
+            line-height: 1.7;
+            color: var(--text-main);
+            margin-bottom: 1rem;
+            font-size: 1.05rem;
+        }
+
+        ul, ol {
+            margin-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        ul li, ol li {
+            line-height: 1.7;
+            margin-bottom: 0.4rem;
+            font-size: 1.02rem;
+        }
+
+        .eq-box {
+            text-align: center;
+            font-size: 1.05rem;
+            padding: 1.1rem 1.25rem;
+            background: rgba(255,255,255,0.55);
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            margin: 1.5rem 0;
+            overflow-x: auto;
+            overflow-y: hidden;
+        }
+        .eq-box mjx-container { overflow-x: auto; overflow-y: hidden; max-width: 100%; }
+
+        .fig-caption {
+            color: var(--text-secondary);
+            font-size: 0.92rem;
+            text-align: left;
+            margin: 0.25rem 0 1.5rem;
+            line-height: 1.55;
+        }
+
+        section.glass-panel > h3 + p,
+        section.glass-panel > h2 + p {
+            margin-top: 0.75rem;
+        }
+        section.glass-panel > .fig-wrap + p,
+        section.glass-panel > .fig-caption + h3,
+        section.glass-panel > .fig-caption + h4,
+        section.glass-panel > .viz-wrap + h3,
+        section.glass-panel > .viz-wrap + h4 {
+            margin-top: 2rem;
+        }
+
+        /* --- LIMITATION / RESOLUTION GRID --- */
+        .limitation-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.25rem;
+            margin-top: 1.5rem;
+        }
+
+        .lim-col-header {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+            text-align: center;
+            padding: 0.5rem;
+            border-radius: 8px;
+        }
+
+        .lim-col-header.bad {
+            color: var(--bad);
+            background: rgba(239, 68, 68, 0.08);
+        }
+
+        .lim-col-header.good {
+            color: var(--good);
+            background: rgba(16, 185, 129, 0.08);
+        }
+
+        .lim-card {
+            background: rgba(255, 255, 255, 0.4);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 1rem 1.25rem;
+            margin-bottom: 0.75rem;
+            backdrop-filter: blur(4px);
+        }
+
+        .lim-card .lim-tag {
+            display: inline-block;
+            font-family: 'Courier New', monospace;
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 2px 7px;
+            border-radius: 4px;
+            margin-right: 0.5rem;
+        }
+
+        .lim-card .lim-tag.bad {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--bad);
+        }
+
+        .lim-card .lim-tag.good {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--good);
+        }
+
+        .lim-card .lim-title {
+            font-weight: 700;
+            display: inline;
+            font-size: 0.98rem;
+        }
+
+        .lim-card .lim-body {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+            margin-bottom: 0;
+            line-height: 1.55;
+        }
+
+        /* --- TABLES --- */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--text-main);
+        }
+
+        th,
+        td {
+            padding: 1rem;
+            text-align: center;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        th {
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.05em;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .best-score {
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        /* --- KEY STATS --- */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+        .stat-card {
+            background: rgba(255, 255, 255, 0.4);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 1.25rem;
+            text-align: center;
+            backdrop-filter: blur(4px);
+        }
+        .stat-card .stat-value {
+            font-size: 2rem;
+            font-weight: 800;
+            background: -webkit-linear-gradient(135deg, var(--accent), var(--accent-hover));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1;
+            margin-bottom: 0.4rem;
+        }
+        .stat-card .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        /* --- RESULTS GRID & SELECTOR --- */
+        .results-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            transition: opacity 0.2s ease;
+        }
+
+        .result-item {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--glass-border);
+            transition: transform 0.3s ease;
+            background: white;
+        }
+
+        .result-item:hover {
+            transform: scale(1.01);
+            z-index: 10;
+        }
+
+        .result-item img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .result-label {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 0.5rem;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            font-size: 0.85rem;
+            text-align: center;
+            backdrop-filter: blur(4px);
+            font-weight: 600;
+        }
+
+        .dataset-selector {
+            display: flex;
+            justify-content: center;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .dataset-btn {
+            background: transparent;
+            border: 1px solid var(--glass-border);
+            color: var(--text-secondary);
+            padding: 0.5rem 1.25rem;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            font-size: 0.9rem;
+            min-width: 120px;
+        }
+
+        .dataset-btn:hover,
+        .dataset-btn.active {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+            box-shadow: 0 4px 12px rgba(106, 17, 203, 0.2);
+            transform: translateY(-2px);
+        }
+
+        /* --- VIDEO GRID --- */
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-top: 1rem;
+            margin-bottom: 2rem;
+        }
+        .video-cell {
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid var(--glass-border);
+            background: black;
+        }
+        .video-cell video {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+        .video-cell .video-label {
+            text-align: center;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            padding: 0.4rem;
+            background: rgba(255,255,255,0.55);
+        }
+        .video-cell .video-label.ours {
+            color: var(--accent);
+        }
+
+        /* --- METHODOLOGY LAYOUT --- */
+        .method-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2.5rem;
+            align-items: center;
+            margin-top: 2.5rem;
+            padding-top: 2rem;
+            border-top: 1px solid var(--glass-border);
+        }
+
+        .method-row .fig-wrap,
+        .method-row img {
+            width: 100%;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            margin: 0;
+        }
+
+        .method-text h3 {
+            margin-top: 0;
+            color: var(--accent);
+        }
+
+        /* --- BIBTEX --- */
+        .bibtex-box {
+            background: var(--code-bg);
+            padding: 1.5rem;
+            border-radius: 10px;
+            overflow-x: auto;
+            border: 1px solid var(--glass-border);
+            position: relative;
+        }
+
+        .bibtex-box::-webkit-scrollbar { height: 10px; }
+        .bibtex-box::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+            border-radius: 5px;
+            margin: 0 10px;
+        }
+        .bibtex-box::-webkit-scrollbar-thumb {
+            background: var(--accent);
+            border-radius: 5px;
+            border: 2px solid transparent;
+            background-clip: content-box;
+        }
+        .bibtex-box::-webkit-scrollbar-thumb:hover {
+            background-color: var(--accent-hover);
+        }
+
+        pre {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1.0rem;
+            color: var(--text-main);
+            white-space: pre;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            padding: 0.35rem 0.8rem;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            color: var(--text-main);
+        }
+        .copy-btn:hover {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        .metrics-table {
+            animation: fadeIn 0.4s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- RESPONSIVE --- */
+        @media (max-width: 768px) {
+            .paper-title { font-size: 2rem; }
+            .container { padding: 2rem 1rem; }
+            .glass-panel { padding: 1.5rem; }
+            .link-buttons { flex-direction: column; width: 100%; }
+            .btn-main { width: 100%; justify-content: center; }
+            .results-grid { grid-template-columns: 1fr; gap: 1rem; }
+            .method-row { grid-template-columns: 1fr; gap: 1.5rem; text-align: center; }
+            .limitation-grid { grid-template-columns: 1fr; }
+            .video-grid { grid-template-columns: 1fr; }
+        }
+    </style>
 </head>
+
 <body>
 
-<nav class="navbar" role="navigation" aria-label="main navigation">
-  <div class="navbar-brand">
-    <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false">
-      <span aria-hidden="true"></span>
-      <span aria-hidden="true"></span>
-      <span aria-hidden="true"></span>
-    </a>
-  </div>
-</nav>
+    <!-- 3D Background -->
+    <div id="canvas-container"></div>
 
+    <div class="container">
 
-<!-- ============================================================ -->
-<!-- Hero / Title -->
-<!-- ============================================================ -->
-<section class="hero">
-  <div class="hero-body">
-    <div class="container is-max-desktop">
-      <div class="columns is-centered">
-        <div class="column has-text-centered">
-          <h1 class="title is-1 publication-title">DiscreteRTC: Discrete Diffusion Policies<br>are Natural Asynchronous Executors</h1>
-          <div class="is-size-5 publication-authors">
-            <span class="author-block">Pengcheng Wang<sup>1</sup>,</span>
-            <span class="author-block">Kaiwen Hong<sup>2</sup>,</span>
-            <span class="author-block">Chensheng Peng<sup>1</sup>,</span>
-            <span class="author-block">Katherine Driggs-Campbell<sup>2</sup>,</span>
-            <span class="author-block">Masayoshi Tomizuka<sup>1</sup>,</span>
-            <span class="author-block">Chenfeng Xu<sup>3</sup>,</span>
-            <span class="author-block">Chen Tang<sup>4</sup></span>
-          </div>
+        <!-- HEADER -->
+        <header class="paper-header">
+            <h1 class="paper-title">DiscreteRTC: Discrete Diffusion Policies are Natural Asynchronous Executors</h1>
 
-          <div class="is-size-5 publication-authors">
-            <span class="author-block"><sup>1</sup>UC Berkeley,</span>
-            <span class="author-block"><sup>2</sup>UIUC,</span>
-            <span class="author-block"><sup>3</sup>UT Austin,</span>
-            <span class="author-block"><sup>4</sup>UCLA</span>
-          </div>
+            <div class="author-list">
+                <a href="#">Pengcheng Wang</a><sup>1</sup>,
+                <a href="#">Kaiwen Hong</a><sup>2</sup>,
+                <a href="#">Chensheng Peng</a><sup>1</sup><br>
+                <a href="#">Katherine Driggs-Campbell</a><sup>2</sup>,
+                <a href="#">Masayoshi Tomizuka</a><sup>1</sup>,
+                <a href="#">Chenfeng Xu</a><sup>3</sup>,
+                <a href="#">Chen Tang</a><sup>4</sup>
+            </div>
 
-          <!-- <div class="is-size-5 publication-authors">
-            <span class="author-block">Submitted to CoRL 2026</span>
-          </div> -->
+            <div class="affiliations">
+                <sup>1</sup>UC Berkeley, &nbsp;<sup>2</sup>UIUC, &nbsp;<sup>3</sup>UT Austin, &nbsp;<sup>4</sup>UCLA
+            </div>
 
-          <div class="column has-text-centered">
-            <div class="publication-links">
-              <!-- arXiv Link (placeholder). -->
-              <span class="link-block">
-                <a href="#"
-                   class="external-link button is-normal is-rounded is-dark">
-                  <span class="icon">
-                      <i class="ai ai-arxiv"></i>
-                  </span>
-                  <span>arXiv</span>
+            <div class="link-buttons">
+                <a href="static/paper.pdf" class="btn-main">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 2l5 5h-5V4zM6 20V4h5v5h5v11H6z" />
+                    </svg>
+                    Paper
                 </a>
-              </span>
-              <!-- Code Link (placeholder). -->
-              <span class="link-block">
-                <a href="https://github.com/outsider86/DiscreteRTC-Kinetix"
-                   class="external-link button is-normal is-rounded is-dark">
-                  <span class="icon">
-                      <i class="fab fa-github"></i>
-                  </span>
-                  <span>Code</span>
+                <a href="#" class="btn-main">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14z"/>
+                        <path d="M7 7h10v2H7zm0 4h10v2H7zm0 4h7v2H7z"/>
+                    </svg>
+                    ArXiv
                 </a>
-              </span>
+                <a href="https://github.com/outsider86/DiscreteRTC-Kinetix" class="btn-main">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                    </svg>
+                    Code
+                </a>
             </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
+        </header>
 
-
-<!-- ============================================================ -->
-<!-- Teaser: Main Demo -->
-<!-- ============================================================ -->
-<section class="hero teaser">
-  <div class="container is-max-desktop">
-    <div class="hero-body">
-      <figure class="image">
-        <img src="./static/figures/asyncInference.svg" alt="RTC with discrete diffusion policies solving dynamic manipulation" class="figure-img">
-      </figure>
-    </div>
-  </div>
-</section>
-
-
-<!-- ============================================================ -->
-<!-- Abstract -->
-<!-- ============================================================ -->
-<section class="section">
-  <div class="container is-max-desktop">
-    <div class="columns is-centered has-text-centered">
-      <div class="column is-four-fifths">
-        <h2 class="title is-3">Abstract</h2>
-        <div class="content has-text-justified">
-          <p>
-            As physical AI models grow, their inference latency becomes a critical obstacle for
-            real-time control. Asynchronous execution hides this latency by letting a policy
-            <em>think while acting</em>, and real-time chunking (RTC) removes inter-chunk
-            discontinuity by posing chunk transitions as inpainting: freezing committed actions and
-            generating the rest consistently.
-            However, RTC with a flow-matching head is structurally suboptimal: its inpainting relies
-            on inference-time gradient corrections rather than the base policy, yielding no
-            pre-training benefit, a fine-tuning burden, hand-tuned guidance weights, and extra
-            per-step cost that inflates the very latency RTC aims to hide.
-            We observe that discrete diffusion policies are <em>natural</em> asynchronous executors:
-            inpainting is their native operation, resolving all four limitations, while early
-            stopping provides adaptive guidance and <em>reduces</em> inference cost.
-            We propose <strong>DiscreteRTC</strong>, which replaces gradient-based inpainting with
-            native unmasking, and show on dynamic simulation and real-world manipulation tasks that
-            it outperforms continuous RTC and other baselines in success rate while being simpler and
-            faster.
-          </p>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-
-<!-- ============================================================ -->
-<!-- Sec 3. Flow-Matching is Not Suitable for RTC -->
-<!-- ============================================================ -->
-<section class="section">
-  <div class="container is-max-desktop">
-    <div class="columns is-centered">
-      <div class="column is-full-width">
-        <h2 class="title is-3">Flow-Matching is Not Suitable for RTC</h2>
-
-        <!-- Interactive Continuous RTC Visualization -->
-        <div class="columns is-centered" style="margin-bottom: 2rem;">
-          <div class="column is-12">
-            <div class="viz-container">
-              <div class="viz-label">Interactive Visualization: Continuous RTC (Flow-Matching)</div>
-              <iframe class="viz-iframe" src="./static/visualizations/continuousRTC.html"></iframe>
+        <!-- COVER / TEASER (Fig. 1 in paper) -->
+        <section class="glass-panel">
+            <div class="fig-wrap" style="margin: 0; --ar: 1000 / 490;">
+                <object data="static/figures/methods/cover/cover.svg" type="image/svg+xml" aria-label="RTC with discrete diffusion policies solving dynamic manipulation"></object>
             </div>
-          </div>
-        </div>
-
-        <div class="content has-text-justified">
-          <p>
-            Despite its elegance, RTC with a flow-matching action head is far from ideal.
-            We systematically analyze its limitations and show that they stem from the same root cause:
-            the inpainting capability comes from the inference-time correction (e.g., &#928;GDM),
-            not from the base policy.
-          </p>
-        </div>
-
-        <!-- Key limitations header -->
-        <h3 class="title is-4">Key Limitations</h3>
-
-        <!-- Figure 1: Continuous RTC diagram -->
-        <div class="columns is-centered" style="margin-bottom: 1.5rem;">
-          <div class="column is-11">
-            <figure class="image">
-              <img src="./static/figures/continuousRTC.svg" alt="Limitations of continuous RTC with flow-matching head" class="figure-img">
-              <figcaption class="has-text-centered" style="margin-top: 0.5rem; color: #888; font-size: 0.9rem;">
-                <strong>Figure 1:</strong> RTC with a flow-matching head. The flow-matching head is
-                ill-suited for RTC because (a) during pre-training, the base policy is not trained on
-                inpainting tasks; (b) to acquire this capability, a specially designed fine-tuning
-                stage is required; (c) at inference time, RTC relies on heuristic guidance weight
-                design; and (d) incurs extra computation for action chunk generation.
-              </figcaption>
-            </figure>
-          </div>
-        </div>
-
-        <!-- Key limitation items -->
-        <div>
-          <div class="key-point">
-            <strong>(a) Pre-training without Inpainting.</strong>
-            The flow policy is not pre-trained on action chunks with inconsistent noise levels,
-            so scaling pre-training does not directly improve asynchronous performance.
-          </div>
-          <div class="key-point">
-            <strong>(b) Fine-tuning Required.</strong>
-            Adequate inpainting quality demands a dedicated fine-tuning stage with techniques
-            such as action-suffix conditioning, adding training complexity and risking interference
-            with the base generation quality.
-          </div>
-          <div class="key-point">
-            <strong>(c) Heuristic Guidance Weights.</strong>
-            The soft-masking schedule and gradient clipping threshold are hand-designed and must be
-            re-tuned per task and model.
-          </div>
-          <div class="key-point">
-            <strong>(d) Extra Inference Cost.</strong>
-            Computing the guidance term at every denoising step roughly doubles computation,
-            ironically increasing the very latency RTC aims to hide.
-          </div>
-        </div>
-
-      </div>
-    </div>
-  </div>
-</section>
-
-
-<!-- ============================================================ -->
-<!-- Sec 4. Discrete Diffusion Policies are Natural Async Executors -->
-<!-- ============================================================ -->
-<section class="section">
-  <div class="container is-max-desktop">
-    <div class="columns is-centered">
-      <div class="column is-full-width">
-        <h2 class="title is-3">Discrete Diffusion Policies are Natural Asynchronous Executors</h2>
-
-        <!-- Interactive Discrete RTC Visualization -->
-        <div class="columns is-centered" style="margin-bottom: 2rem;">
-          <div class="column is-12">
-            <div class="viz-container">
-              <div class="viz-label">Interactive Visualization: Discrete RTC (Ours)</div>
-              <iframe class="viz-iframe" src="./static/visualizations/discreteRTC.html"></iframe>
-            </div>
-          </div>
-        </div>
-
-        <div class="content has-text-justified">
-          <p>
-            We show that discrete diffusion policies naturally resolve the limitations of
-            flow-matching-based RTC. Since inpainting is the native operation of discrete diffusion
-            &mdash; given a partially masked token sequence, the model predicts and unmasks the
-            missing tokens &mdash; no architectural modification, no additional loss term, and no
-            inference-time guidance are needed.
-          </p>
-        </div>
-
-        <!-- Key advantages header -->
-        <h3 class="title is-4">Key Advantages</h3>
-
-        <!-- Figure 2: Discrete RTC diagram -->
-        <div class="columns is-centered" style="margin-bottom: 1.5rem;">
-          <div class="column is-11">
-            <figure class="image">
-              <img src="./static/figures/discreteRTC.svg" alt="Advantages of discrete RTC" class="figure-img">
-              <figcaption class="has-text-centered" style="margin-top: 0.5rem; color: #888; font-size: 0.9rem;">
-                <strong>Figure 2:</strong> RTC with a discrete diffusion head. The discrete diffusion
-                head is naturally suited for RTC because (a) during pre-training, the base policy is
-                already trained on inpainting tasks; (b) consequently, no inpainting-specific
-                fine-tuning is required; (c) at inference time, early stopping from the previous
-                inference leaves a natural and adaptive guidance signal; and (d) fewer tokens need to
-                be unmasked per step, reducing the computational cost of each forward pass.
-              </figcaption>
-            </figure>
-          </div>
-        </div>
-
-        <!-- Key advantage items -->
-        <div>
-          <div class="key-point">
-            <strong>(a) Pre-trained with Inpainting.</strong>
-            Scaling pre-training directly benefits asynchronous execution, since inpainting
-            is structurally identical to standard masked generation &mdash; larger models and more data
-            yield better generation.
-          </div>
-          <div class="key-point">
-            <strong>(b) Fine-tuning Free.</strong>
-            Since the inpainting capability is acquired during pre-training, a discrete diffusion policy
-            can be deployed for asynchronous execution immediately, with no inpainting-specific fine-tuning.
-          </div>
-          <div class="key-point">
-            <strong>(c) Natural Guidance Weights.</strong>
-            The early-stopping mechanism provides natural guidance via the number of unmasked tokens &mdash;
-            the remaining partially unmasked actions serve as an adaptive guidance signal for the next inference,
-            replacing heuristic soft-masking schedules.
-          </div>
-          <div class="key-point">
-            <strong>(d) Lower Inference Cost.</strong>
-            Since unmasking starts from an intermediate state and ends at an intermediate stage, the total
-            number of unmasking steps is reduced to roughly s/H of the original. Instead of increasing
-            inference cost as in continuous RTC (2.5x), DiscreteRTC actually reduces it (~0.4x).
-          </div>
-        </div>
-
-      </div>
-    </div>
-  </div>
-</section>
-
-
-<!-- ============================================================ -->
-<!-- Sec 5. Experiments -->
-<!-- ============================================================ -->
-<section class="section">
-  <div class="container is-max-desktop">
-    <div class="columns is-centered">
-      <div class="column is-full-width">
-        <h2 class="title is-3">Experiments</h2>
-
-        <!-- ── 5.1 Simulated Benchmark ── -->
-        <h3 class="title is-4">Simulated Benchmark: Kinetix</h3>
-
-        <!-- Figure 3: Main results -->
-        <div class="columns is-centered" style="margin-bottom: 1.5rem;">
-          <div class="column is-12">
-            <figure class="image">
-              <img src="./static/figures/kinetix_main.svg" alt="Main experimental results in Kinetix" class="figure-img">
-              <figcaption class="has-text-centered" style="margin-top: 0.5rem; color: #888; font-size: 0.9rem;">
-                <strong>Figure 3:</strong> Experimental results in Kinetix.
-                <strong>Left:</strong> average solve rate and throughputs across all environments with
-                different inference delays; <strong>Right:</strong> solve rates for every task with
-                different inference delays. The execution horizon follows
-                <em>s</em> = max(1, <em>d</em>) and each datapoint represents 2048 trials.
-              </figcaption>
-            </figure>
-          </div>
-        </div>
-
-        <div class="content has-text-justified">
-          <p>
-            Across all inference delays, DiscreteRTC consistently outperforms ContinuousRTC and other
-            variants on both solve rates and throughputs, showing the great advantages of the native
-            inpainting capability in discrete diffusion policies. Moreover, as shown in Figure 4,
-            DiscreteRTC requires fewer iterative steps than ContinuousRTC, especially under large
-            delays with execution horizon as discussed in Sec. 4.2 of the paper.
-          </p>
-        </div>
-
-        <!-- Figures 4 & 5 -->
-        <div class="columns is-centered" style="margin-bottom: 1.5rem;">
-          <div class="column has-text-centered">
-            <figure class="image" style="display: inline-block;">
-              <img src="./static/figures/kinetix_steps.png" alt="Required iterative steps comparison" class="figure-img">
-              <figcaption class="has-text-centered" style="margin-top: 0.5rem; color: #888; font-size: 0.9rem;">
-                <strong>Figure 4:</strong> Required iterative steps of different policy
-                architectures in Kinetix with s = max(1, d).
-              </figcaption>
-            </figure>
-          </div>
-          <div class="column has-text-centered">
-            <figure class="image" style="display: inline-block;">
-              <img src="./static/figures/kinetix_ablation.svg" alt="Extended baselines and ablation results" class="figure-img">
-              <figcaption class="has-text-centered" style="margin-top: 0.5rem; color: #888; font-size: 0.9rem;">
-                <strong>Figure 5:</strong> Experimental results of extended baselines
-                in Kinetix with s = max(1, d).
-              </figcaption>
-            </figure>
-          </div>
-        </div>
-
-        <div class="content has-text-justified">
-          <p>
-            Figure 5 presents the experimental results of more variants in Kinetix:
-          </p>
-          <ul>
-            <li><strong>vs. Training-time Continuous RTC:</strong> Under varying delays, DiscreteRTC
-              outperforms Training-time Continuous RTC, which is fine-tuned with an explicit objective
-              and recipe to improve inpainting, further demonstrating the strong performance of the
-              fine-tuning free DiscreteRTC.</li>
-            <li><strong>DiscreteRTC + Fixed Steps:</strong> By using fixed unmasking steps during inference,
-              this variant achieves better performance by generating more fine-grained actions with the
-              same computation budget.</li>
-            <li><strong>DiscreteVLASH:</strong> Integrating with VLASH achieves more stable performance
-              across varying delays but at the cost of performance drop with smaller delays. This
-              demonstrates that DiscreteRTC can be seamlessly combined with advanced inference-time
-              methods for further gains.</li>
-          </ul>
-        </div>
-
-        <!-- ── Real-World Results ── -->
-        <h3 class="title is-4" style="margin-top: 2.5rem;">Real-World Results</h3>
-
-        <div class="content has-text-justified">
-          <p>
-            We design two dynamical tasks to stress reactiveness:
-            <strong>Dynamic Pick</strong> and <strong>Dynamic Place</strong>, where the robot must
-            pick a moving object or place it onto a moving platform. This requires the robot to
-            continuously re-estimate the object pose and execute smoothly.
-          </p>
-        </div>
-
-        <!-- Real-world setup image -->
-        <div class="columns is-centered" style="margin-bottom: 1.5rem;">
-          <div class="column is-10">
-            <figure class="image">
-              <img src="./static/figures/realworld_setup.jpg" alt="Real-world setup for Dynamic Pick and Place" class="figure-img">
-              <figcaption class="has-text-centered" style="margin-top: 0.5rem; color: #888; font-size: 0.9rem;">
-                <strong>Figure 6:</strong> Real-world setup for the Dynamic Pick and Dynamic Place tasks.
-              </figcaption>
-            </figure>
-          </div>
-        </div>
-
-        <!-- Real-world results table -->
-        <div class="columns is-centered" style="margin-bottom: 1.5rem;">
-          <div class="column is-10">
-            <table class="table is-bordered is-striped is-fullwidth has-text-centered">
-              <thead>
-                <tr>
-                  <th rowspan="2" class="has-text-centered" style="vertical-align: middle;">Method</th>
-                  <th colspan="2" class="has-text-centered">Success Rate &uarr;</th>
-                  <th rowspan="2" class="has-text-centered" style="vertical-align: middle;">Inference Time &darr;</th>
-                </tr>
-                <tr>
-                  <th class="has-text-centered">Dynamic Place</th>
-                  <th class="has-text-centered">Dynamic Pick</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td class="has-text-left">Continuous Sync</td>
-                  <td>0%</td>
-                  <td>0%</td>
-                  <td>151 ms</td>
-                </tr>
-                <tr>
-                  <td class="has-text-left">Discrete Sync</td>
-                  <td>0%</td>
-                  <td>0%</td>
-                  <td>303 ms</td>
-                </tr>
-                <tr>
-                  <td class="has-text-left">Continuous RTC</td>
-                  <td>90%</td>
-                  <td>45%</td>
-                  <td>256 ms (&sim;1.7&times;)</td>
-                </tr>
-                <tr>
-                  <td class="has-text-left"><strong>Discrete RTC (Ours)</strong></td>
-                  <td><strong>100%</strong></td>
-                  <td><strong>95%</strong></td>
-                  <td><strong>206 ms (&sim;0.6&times;)</strong></td>
-                </tr>
-              </tbody>
-            </table>
-            <p class="has-text-centered" style="color: #888; font-size: 0.9rem;">
-              <strong>Table 1:</strong> Real-world results on the two dynamical tasks. Success rate
-              over 20 trials per task and average inference time on a single RTX 4090.
+            <p class="fig-caption" style="margin-bottom: 0; margin-top: 1rem;">
+                <b>Figure 1:</b> RTC with discrete diffusion policies solving dynamic manipulation.
             </p>
-          </div>
-        </div>
+        </section>
 
-        <div class="content has-text-justified">
-          <p>
-            <strong>Results.</strong> Both Sync baselines completely fail (0%), confirming that
-            reactive asynchronous execution is indispensable in these regimes. In terms of success
-            rate, DiscreteRTC outperforms ContinuousRTC with the largest gap on the continuously
-            moving Dynamic Pick target, where reactiveness matters most. In terms of inference time,
-            the two asynchronous methods move in opposite directions: ContinuousRTC inflates
-            flow-matching cost from 151 to 256&nbsp;ms, a near-1.7&times; overhead from &Pi;GDM,
-            whereas DiscreteRTC <em>reduces</em> discrete diffusion cost from 303 to 206&nbsp;ms with
-            fewer tokens to unmask. Consequently, although Discrete Sync alone is
-            slower than Continuous Sync with naive bin-discretization, DiscreteRTC ends up both faster
-            and more accurate than Continuous RTC &mdash; demonstrating that the benefits of RTC and
-            discrete diffusion compound rather than conflict.
-          </p>
-        </div>
+        <!-- TL;DR -->
+        <section class="glass-panel" data-tilt data-tilt-max="2" data-tilt-glare data-tilt-max-glare="0.05">
+            <h2>TL;DR</h2>
+            <p style="font-size: 1.1rem; font-weight: 500; margin-bottom: 0;">
+                Unlike chatbots, physical AI must act while the world keeps evolving &mdash; so async execution is a
+                <em>structural requirement</em>, not a latency optimization. Discrete diffusion policies are
+                <em>natural asynchronous executors</em>: native unmasking replaces external corrections, making
+                real-time chunking <b>fine-tuning-free</b>, <b>faster at inference</b>, and <b>more accurate</b>
+                than flow-matching RTC.
+            </p>
 
-        <!-- Dynamic Pick videos -->
-        <h4 class="title is-5 has-text-centered" style="margin-top: 2rem; margin-bottom: 1rem;">Dynamic Pick</h4>
-        <div class="columns is-centered">
-          <div class="column is-4">
-            <div class="viz-label">Continuous Sync (4&times;)</div>
-            <video autoplay muted loop playsinline preload="metadata" style="width: 100%; border-radius: 8px;">
-              <source src="./static/videos/realworld/pick-sync-4x.mp4" type="video/mp4">
-            </video>
-          </div>
-          <div class="column is-4">
-            <div class="viz-label">Continuous RTC</div>
-            <video autoplay muted loop playsinline preload="metadata" style="width: 100%; border-radius: 8px;">
-              <source src="./static/videos/realworld/fm-pick.mp4" type="video/mp4">
-            </video>
-          </div>
-          <div class="column is-4">
-            <div class="viz-label"><strong>Discrete RTC (Ours)</strong></div>
-            <video autoplay muted loop playsinline preload="metadata" style="width: 100%; border-radius: 8px;">
-              <source src="./static/videos/realworld/dd-pick.mp4" type="video/mp4">
-            </video>
-          </div>
-        </div>
+            <div class="stat-grid">
+                <div class="stat-card">
+                    <div class="stat-value">+50pp</div>
+                    <div class="stat-label">Dynamic Pick success vs. Continuous RTC (95% vs. 45%)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">~0.7&times;</div>
+                    <div class="stat-label">Inference time vs. discrete sync base (206 / 303 ms)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">0</div>
+                    <div class="stat-label">Inpainting-specific fine-tuning steps</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">4 / 4</div>
+                    <div class="stat-label">Limitations of flow-matching RTC resolved</div>
+                </div>
+            </div>
+        </section>
 
-        <!-- Dynamic Place videos -->
-        <h4 class="title is-5 has-text-centered" style="margin-top: 2rem; margin-bottom: 1rem;">Dynamic Place</h4>
-        <div class="columns is-centered">
-          <div class="column is-4">
-            <div class="viz-label">Continuous Sync (4&times;)</div>
-            <video autoplay muted loop playsinline preload="metadata" style="width: 100%; border-radius: 8px;">
-              <source src="./static/videos/realworld/place-sync-4x.mp4" type="video/mp4">
-            </video>
-          </div>
-          <div class="column is-4">
-            <div class="viz-label">Continuous RTC</div>
-            <video autoplay muted loop playsinline preload="metadata" style="width: 100%; border-radius: 8px;">
-              <source src="./static/videos/realworld/fm-place.mp4" type="video/mp4">
-            </video>
-          </div>
-          <div class="column is-4">
-            <div class="viz-label"><strong>Discrete RTC (Ours)</strong></div>
-            <video autoplay muted loop playsinline preload="metadata" style="width: 100%; border-radius: 8px;">
-              <source src="./static/videos/realworld/dd-place.mp4" type="video/mp4">
-            </video>
-          </div>
-        </div>
+        <!-- ABSTRACT -->
+        <section class="glass-panel">
+            <h2>Abstract</h2>
+            <p>
+                Unlike chatbots, physical AI must act while the world keeps evolving. The inter-chunk pause of
+                synchronous executors is fatal for dynamic tasks &mdash; regardless of how fast the inference is.
+                Asynchronous execution &mdash; <em>thinking while acting</em> &mdash; is therefore a structural
+                requirement, and real-time chunking (RTC) makes it viable by recasting chunk transitions as
+                inpainting: freezing committed actions and consistently generating the remainder.
+            </p>
+            <p>
+                However, RTC with a flow-matching policy is structurally suboptimal: its inpainting comes from
+                inference-time corrections rather than the base policy, yielding little pre-training benefit,
+                specific fine-tuning, heuristic guidance weights, and extra computation that inflates the latency.
+            </p>
+            <p>
+                In this work, we observe that <b>discrete diffusion policies</b>, which generate actions by
+                iteratively unmasking, are <em>natural asynchronous executors that resolve all limitations at once</em>:
+                they are fine-tuning free since inpainting is their native operation, while early stopping further
+                provides adaptive guidance and reduces inference cost. We propose <b>DiscreteRTC</b>, which replaces
+                external corrections with native unmasking, and show on dynamic simulated benchmarks and real-world
+                dynamic manipulation tasks that it achieves higher success rates than continuous RTC and other
+                baselines &mdash; while being simpler to implement, faster at inference, and better at execution.
+            </p>
+            <div class="fig-wrap" style="--ar: 729 / 507;">
+                <object data="static/figures/methods/asyncInference/asyncInference.svg" type="image/svg+xml" aria-label="Asynchronous inference overview"></object>
+            </div>
+            <p class="fig-caption">
+                <b>Overview:</b> while the base policy keeps thinking, the robot keeps acting on previously committed
+                tokens. RTC poses each chunk transition as an inpainting problem.
+            </p>
+        </section>
 
-      </div>
-    </div>
-  </div>
-</section>
+        <!-- SECTION 3: FLOW-MATCHING IS NOT SUITABLE FOR RTC -->
+        <section class="glass-panel">
+            <h2>Flow-Matching is Not Suitable for RTC</h2>
+            <p>
+                RTC was specifically designed for flow-matching policies &mdash; the predominant action head in
+                today's state-of-the-art VLAs. Yet, as we systematically show, RTC with a flow-matching head is
+                <em>far from ideal with four critical limitations</em>, all stemming from the same root cause:
+                <em>the inpainting capability comes from inference-time correction (e.g., $\Pi$GDM), not from the
+                base policy.</em>
+            </p>
 
+            <div class="fig-wrap" style="--ar: 780 / 340;">
+                <object data="static/figures/methods/continuousRTC/continuousRTC.svg" type="image/svg+xml" aria-label="Limitations of continuous RTC with flow-matching head"></object>
+            </div>
+            <p class="fig-caption">
+                <b>Figure 2:</b> RTC with a flow-matching head. Color encodes noise level (green = clean, yellow =
+                pure noise). The flow-matching head is ill-suited for RTC because (a) the base policy is never
+                pre-trained on inpainting; (b) acquiring this capability demands a dedicated fine-tuning stage; (c)
+                inference-time inpainting relies on a heuristic guidance weight schedule; and (d) the gradient
+                correction roughly doubles per-step cost.
+            </p>
 
-<!-- ============================================================ -->
-<!-- Sec 7. Discussion -->
-<!-- ============================================================ -->
-<section class="section">
-  <div class="container is-max-desktop">
-    <div class="columns is-centered">
-      <div class="column is-full-width">
-        <h2 class="title is-3">Discussion</h2>
+            <h4>$\Pi$GDM Inference Step</h4>
+            <p>The full denoising step of $\Pi$GDM augments the velocity field with a gradient correction toward the frozen prefix $\mathbf{Y}$:</p>
+            <div class="eq-box">
+                \[ \mathbf{A}_t^{\tau+\frac{1}{n}} = \mathbf{A}_t^\tau + \frac{1}{n}\!\left( v_\pi(\mathbf{A}_t^\tau, \mathbf{o}_t, \tau) + \underbrace{\min\!\left(\beta,\,\tfrac{1-\tau}{\tau\,r_\tau^2}\right)\!\left(\mathbf{Y} - \hat{f}_{\mathbf{A}^1}(\mathbf{A}^\tau)\right)^{\!\top}\!\mathrm{diag}(\mathbf{W})\,\frac{\partial \hat{f}_{\mathbf{A}^1}}{\partial \mathbf{A}'}\bigg|_{\mathbf{A}^\tau}}_{\Pi\text{GDM gradient correction}} \right) \] </div>
 
-        <div class="content has-text-justified">
-          <p>
-            <strong>Conclusions.</strong> We presented DiscreteRTC, which exploits the native inpainting
-            capability of discrete diffusion for asynchronous real-time control, eliminating the need
-            for inpainting-specific fine-tuning, heuristic guidance weights, and extra inference cost
-            inherent to flow-matching-based RTC. Simulated and real-world experiments show that
-            DiscreteRTC outperforms ContinuousRTC and other asynchronous baselines, and can be
-            combined with methods such as VLASH for further gains.
-          </p>
-          <p>
-            <strong>Limitations.</strong> We note several limitations of our current instantiation,
-            each coinciding with an active research direction whose progress will directly benefit
-            DiscreteRTC:
-          </p>
-          <ol>
-            <li>Our naive <em>k</em>-bin quantization ignores temporal structure and yields overly
-              long token sequences, motivating compact, temporally aware tokenizers.</li>
-            <li>Our modularized AR-VLM + discrete diffusion head prevents the backbone from
-              participating in iterative unmasking, a gap that unified discrete-diffusion VLAs aim
-              to close.</li>
-            <li>Traditional max-confidence unmasking does not yet translate the natural schedule
-              into consistent gains.</li>
-          </ol>
-          <p>
-            <strong>Future Steps.</strong> These limitations point to three concrete directions:
-          </p>
-          <ol>
-            <li>A <em>time-causally ordered action tokenizer</em> that produces temporally ordered,
-              compact token representations.</li>
-            <li>A <em>unified discrete diffusion VLA</em> in which observation reasoning and action
-              generation share the same backbone.</li>
-            <li>An <em>appropriate yet principled unmasking strategy</em> that fully unleashes the
-              potential of the natural schedule &mdash; emerging techniques such as AR-block decoding
-              align better with the implicit autoregressive structure induced by RTC and integrate
-              seamlessly.</li>
-          </ol>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
+            <div class="viz-wrap">
+                <div class="viz-label">Interactive Visualization &mdash; Continuous RTC (Flow-Matching)</div>
+                <iframe class="viz-iframe" src="static/visualizations/continuousRTC.html"></iframe>
+            </div>
 
+            <h3 style="text-align: center; margin-top: 2rem; border-bottom: 2px solid var(--bad); display: inline-block; padding-bottom: 0.3rem;">
+                Four Critical Limitations
+            </h3>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+                <div class="lim-card">
+                    <span class="lim-tag bad">a</span><span class="lim-title">Pre-training without Inpainting</span>
+                    <p class="lim-body">Flow-matching pre-training corrupts every action in a chunk at a single, <b>consistent</b> noise level $\tau$. RTC inference instead starts from an <b>inconsistent</b> chunk &mdash; 0 for committed, 1 for new, interpolated in between &mdash; a pattern the model has never seen. Therefore, $\Pi$GDM corrections are inevitable and scaling pre-training does not directly improve asynchronous performance.</p>
+                </div>
+                <div class="lim-card">
+                    <span class="lim-tag bad">b</span><span class="lim-title">Fine-tuning Required</span>
+                    <p class="lim-body">Adequate inpainting quality demands a dedicated fine-tuning stage with techniques such as action-suffix conditioning to explicitly introduce the inpainting-specific noise pattern. This adds training complexity, risks interfering with base generation quality, and is especially burdensome for large VLAs already expensive to fine-tune.</p>
+                </div>
+                <div class="lim-card">
+                    <span class="lim-tag bad">c</span><span class="lim-title">Heuristic Guidance</span>
+                    <p class="lim-body">$\Pi$GDM's soft-masking weights $\mathbf{W}$ follow a hand-crafted exponential-decay schedule, and the clipping threshold $\beta$ is fixed across delays, execution horizons, and tasks &mdash; validated only empirically. The schedule cannot adapt to inference-time conditions.</p>
+                </div>
+                <div class="lim-card">
+                    <span class="lim-tag bad">d</span><span class="lim-title">Extra Inference Cost</span>
+                    <p class="lim-body">Computing the guidance term at every denoising step requires a vector-Jacobian product (VJP), which roughly doubles per-step computation &mdash; ironically inflating the very latency RTC was designed to hide.</p>
+                </div>
+            </div>
+        </section>
 
-<!-- ============================================================ -->
-<!-- BibTeX -->
-<!-- ============================================================ -->
-<section class="section" id="BibTeX">
-  <div class="container is-max-desktop content">
-    <h2 class="title">BibTeX</h2>
-    <pre><code>@article{discretertc2026,
+        <!-- SECTION 4: DISCRETE DIFFUSION POLICIES ARE NATURAL ASYNC EXECUTORS -->
+        <section class="glass-panel">
+            <h2>Discrete Diffusion Policies are Natural Asynchronous Executors</h2>
+            <p>
+                Rather than seeking innovation within the flow-matching paradigm, our key observation is structural:
+                replacing the action head with a discrete diffusion policy resolves all four limitations at once.
+                In discrete diffusion, <em>inpainting is the native operation</em> &mdash; given a partially masked
+                token sequence, the policy reconstructs the target chunk by predicting the masked tokens, identical
+                to standard masked generation. Place committed tokens at the right index and inpainting reduces to a
+                single forward pass of the base policy:
+            </p>
+            <div class="eq-box">
+                $\mathbf{A}_t^{k+1} = \pi(\mathbf{A}_t^k, \mathbf{o}_t)$
+            </div>
+
+            <div class="fig-wrap" style="--ar: 780 / 340;">
+                <object data="static/figures/methods/discreteRTC/discreteRTC.svg" type="image/svg+xml" aria-label="Discrete RTC: native unmasking resolves all four limitations"></object>
+            </div>
+            <p class="fig-caption">
+                <b>Figure 3:</b> RTC with a discrete diffusion head. Color encodes masking status (green = unmasked,
+                yellow = masked). The discrete diffusion head is naturally suited for RTC because (a) the base policy
+                is already pre-trained on inpainting; (b) no inpainting-specific fine-tuning is needed; (c) early
+                stopping leaves a natural, adaptive guidance signal; and (d) fewer tokens are unmasked per step,
+                reducing inference cost.
+            </p>
+
+            <div class="viz-wrap">
+                <div class="viz-label">Interactive Visualization &mdash; Discrete RTC (Ours)</div>
+                <iframe class="viz-iframe" src="static/visualizations/discreteRTC.html"></iframe>
+            </div>
+
+            <h3 style="text-align: center; margin-top: 2.5rem; border-bottom: 2px solid var(--good); display: inline-block; padding-bottom: 0.3rem;">
+                All Resolved at Once
+            </h3>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
+                <div class="lim-card">
+                    <span class="lim-tag good">a</span><span class="lim-title">Inpainting as Pre-training</span>
+                    <p class="lim-body">Discrete diffusion policies are pre-trained to inpaint upon randomly masked sequences &mdash; structurally identical to RTC's inference-time pattern. Scaling pre-training (model, data, compute) directly improves asynchronous performance, and the native forward pass suits inference-time inpainting out of the box.</p>
+                </div>
+                <div class="lim-card">
+                    <span class="lim-tag good">b</span><span class="lim-title">Fine-tuning Free</span>
+                    <p class="lim-body">Inpainting-specific patterns are implicitly introduced during pre-training, making discrete diffusion a fine-tuning-free approach for high-quality, out-of-the-box asynchronous execution &mdash; no extra loss term, training stage, or implementation work.</p>
+                </div>
+                <div class="lim-card">
+                    <span class="lim-tag good">c</span><span class="lim-title">Natural Guidance</span>
+                    <p class="lim-body">Once a token is unmasked, it already carries a clear action semantic &mdash; unlike flow-matching, where the chunk is only valid at $\tau{=}1$. We can early-exit inference once the next $s$ actions after the $d$ committed ones are unmasked; the remaining $H-d-s$ partially-unmasked tokens carry over as a <em>natural and adaptive</em> guidance signal for the next inference, replacing the heuristic fixed schedule.</p>
+                </div>
+                <div class="lim-card">
+                    <span class="lim-tag good">d</span><span class="lim-title">Lower Inference Cost</span>
+                    <p class="lim-body">With committed tokens from previous chunks, the tokens to unmask per inference shrink to roughly $s/H$ of the original (or at least $1-d/H$). DiscreteRTC <em>reduces</em> inference cost rather than inflating it &mdash; or, alternatively, keeps the step budget fixed and produces finer-grained actions at the same compute as from-scratch generation.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- SECTION 5: EXPERIMENTS -->
+        <section class="glass-panel">
+            <h2>Experiments</h2>
+
+            <h3 style="margin-top: 0;">5.1 &nbsp;Simulated Benchmark: Kinetix</h3>
+            <p>
+                We evaluate DiscreteRTC on Kinetix &mdash; a simulated benchmark of dynamic tasks involving throwing,
+                catching, and balancing. Gaussian actuation noise is added to make closed-loop corrections critical
+                for success. We build directly on the official RTC codebase and datasets, share the same training
+                setup and policy network size between flow-matching and discrete diffusion policies (the only
+                difference is the final logits layer), and use a trivial $512$-bin quantization for action
+                discretization. Each datapoint averages 2,048 trials.
+            </p>
+
+            <h4>Baselines (same architecture, different async strategies)</h4>
+            <ul>
+                <li><b>Naive Async</b> &mdash; chunks generated from scratch and switched when the new one is ready.</li>
+                <li><b>BID</b> (Bidirectional Decoding) &mdash; rejection sampling for cross-chunk continuity (batch size $N{=}16$, no weak policy).</li>
+                <li><b>RTC</b> &mdash; flow-matching with $\Pi$GDM inpainting and soft masking, the current SOTA for continuous policies.</li>
+                <li><b>Training-time Continuous RTC</b> &mdash; flow-matching fine-tuned with an explicit inpainting recipe.</li>
+                <li><b>DiscreteRTC + Fixed Steps</b> &mdash; same compute budget, finer-grained unmasking for higher action resolution.</li>
+                <li><b>DiscreteVLASH</b> &mdash; integrates VLASH future-state estimation atop DiscreteRTC.</li>
+            </ul>
+
+            <p>Select a view of the Kinetix results below.</p>
+
+            <div class="results-grid" id="results-display">
+                <!-- Injected via JS -->
+            </div>
+
+            <div class="dataset-selector" id="dataset-selector">
+                <button class="dataset-btn active" onclick="updateResults('main', this)">Main Results</button>
+                <button class="dataset-btn" onclick="updateResults('stepablation', this)">Steps &amp; Ablations</button>
+                <button class="dataset-btn" onclick="updateResults('mainfull', this)">Per-Env Detail</button>
+                <button class="dataset-btn" onclick="updateResults('finetune', this)">Fine-tuning Ablation</button>
+            </div>
+
+            <p>
+                Under different inference delays, DiscreteRTC consistently outperforms ContinuousRTC and other
+                variants on both solve rates and throughputs &mdash; demonstrating the advantage of native inpainting
+                in discrete diffusion. Three further observations emerge from the extended results:
+                <em>(1)</em> DiscreteRTC outperforms <b>Training-time Continuous RTC</b> despite being fine-tuning
+                free, showing that explicit inpainting recipes are not the only path forward;
+                <em>(2)</em> with the same compute budget, <b>DiscreteRTC + Fixed Steps</b> generates more
+                fine-grained actions and lifts performance further;
+                <em>(3)</em> integrating <b>VLASH</b> stabilizes performance across varying delays at a small cost
+                under low delay &mdash; showing DiscreteRTC composes seamlessly with advanced inference-time methods.
+            </p>
+
+            <h3>5.2 &nbsp;Real-World Results</h3>
+            <p>
+                We validate DiscreteRTC on a real robot platform, focusing on dynamic tasks where inference latency
+                and control frequency have a crucial impact on closed-loop performance. We design two tasks that
+                directly stress reactiveness &mdash; <b>Dynamic Pick</b> and <b>Dynamic Place</b> &mdash; in which
+                the robot must pick a moving object or place an object on a moving platform, requiring continuous
+                pose re-estimation and smooth execution.
+            </p>
+            <p>
+                Hardware: a UR5e arm with a Robotiq gripper and a wrist-mounted RGB camera. All policies share a
+                Qwen2.5-VL-3B-Instruct VLM backbone paired with a layerwise cross-attention DiT action head
+                (StarVLA). The robot operates at 20&nbsp;Hz on a single RTX 4090. Each method is evaluated over 20
+                trials per task with $d{=}4, s{=}4$.
+            </p>
+
+            <div class="fig-wrap">
+                <img src="Videos/DynamicalPNP/place.jpg" alt="Real-world UR5e setup">
+            </div>
+            <p class="fig-caption">
+                <b>Figure 6:</b> Real-world setup for Dynamic Pick &amp; Dynamic Place &mdash; UR5e + Robotiq gripper,
+                wrist-mounted RGB, turntable target.
+            </p>
+
+            <h4>Quantitative Results</h4>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th rowspan="2" style="text-align: left; vertical-align: middle;">Method</th>
+                            <th colspan="2">Success Rate (&uarr;)</th>
+                            <th rowspan="2" style="vertical-align: middle;">Inference Time (&darr;)</th>
+                        </tr>
+                        <tr>
+                            <th>Dynamic Place</th>
+                            <th>Dynamic Pick</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="text-align: left;">Continuous Sync</td>
+                            <td>0%</td>
+                            <td>0%</td>
+                            <td>151 ms</td>
+                        </tr>
+                        <tr>
+                            <td style="text-align: left;">Discrete Sync</td>
+                            <td>0%</td>
+                            <td>0%</td>
+                            <td>303 ms</td>
+                        </tr>
+                        <tr>
+                            <td style="text-align: left;">Continuous RTC</td>
+                            <td>90%</td>
+                            <td>45%</td>
+                            <td>256 ms (~1.7&times;)</td>
+                        </tr>
+                        <tr style="background: rgba(106, 17, 203, 0.05);">
+                            <td style="text-align: left;"><b>Discrete RTC (Ours)</b></td>
+                            <td class="best-score">100%</td>
+                            <td class="best-score">95%</td>
+                            <td class="best-score">206 ms (~0.7&times;)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="fig-caption">
+                <b>Table 1:</b> Both Sync baselines completely fail (0%), confirming that reactive asynchronous
+                execution is indispensable in these regimes. DiscreteRTC outperforms ContinuousRTC with the largest
+                gap on the continuously moving Dynamic Pick target. The two asynchronous methods move in opposite
+                directions on cost: ContinuousRTC <em>inflates</em> flow-matching cost (151 &rarr; 256 ms, $\sim$1.7&times;
+                $\Pi$GDM overhead), whereas DiscreteRTC <em>reduces</em> discrete diffusion cost (303 &rarr; 206 ms)
+                since fewer tokens need to be unmasked. The benefits of RTC and discrete diffusion compound rather
+                than conflict.
+            </p>
+
+            <h4>Dynamic Pick</h4>
+            <div class="video-grid">
+                <div class="video-cell">
+                    <video autoplay muted loop playsinline preload="metadata">
+                        <source src="static/videos/realworld/pick-sync-4x.mp4" type="video/mp4">
+                    </video>
+                    <div class="video-label">Continuous Sync (4&times;)</div>
+                </div>
+                <div class="video-cell">
+                    <video autoplay muted loop playsinline preload="metadata">
+                        <source src="static/videos/realworld/fm-pick.mp4" type="video/mp4">
+                    </video>
+                    <div class="video-label">Continuous RTC</div>
+                </div>
+                <div class="video-cell">
+                    <video autoplay muted loop playsinline preload="metadata">
+                        <source src="static/videos/realworld/dd-pick.mp4" type="video/mp4">
+                    </video>
+                    <div class="video-label ours">Discrete RTC (Ours)</div>
+                </div>
+            </div>
+
+            <h4>Dynamic Place</h4>
+            <div class="video-grid">
+                <div class="video-cell">
+                    <video autoplay muted loop playsinline preload="metadata">
+                        <source src="static/videos/realworld/place-sync-4x.mp4" type="video/mp4">
+                    </video>
+                    <div class="video-label">Continuous Sync (4&times;)</div>
+                </div>
+                <div class="video-cell">
+                    <video autoplay muted loop playsinline preload="metadata">
+                        <source src="static/videos/realworld/fm-place.mp4" type="video/mp4">
+                    </video>
+                    <div class="video-label">Continuous RTC</div>
+                </div>
+                <div class="video-cell">
+                    <video autoplay muted loop playsinline preload="metadata">
+                        <source src="static/videos/realworld/dd-place.mp4" type="video/mp4">
+                    </video>
+                    <div class="video-label ours">Discrete RTC (Ours)</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- DISCUSSION -->
+        <section class="glass-panel">
+            <h2>Discussion &amp; Future Steps</h2>
+
+            <h3 style="margin-top: 0;">Conclusions</h3>
+            <p>
+                We presented <b>DiscreteRTC</b>, which exploits the native inpainting capability of discrete diffusion
+                for asynchronous real-time control &mdash; eliminating the need for inpainting-specific fine-tuning,
+                heuristic guidance weights, and extra inference cost inherent to flow-matching-based RTC. Simulated
+                and real-world experiments show that DiscreteRTC outperforms ContinuousRTC and other asynchronous
+                baselines, while being simpler to implement, faster at inference, and better at execution &mdash;
+                and composes seamlessly with methods such as VLASH for further gains.
+            </p>
+
+            <h3>Limitations</h3>
+            <p>Each limitation coincides with an active research direction whose progress directly benefits DiscreteRTC:</p>
+            <ol>
+                <li>Naive $k$-bin quantization ignores temporal structure and yields overly long token sequences,
+                    motivating compact, temporally aware tokenizers.</li>
+                <li>Our modularized AR-VLM + discrete diffusion head prevents the backbone from participating in
+                    iterative unmasking &mdash; a gap unified discrete-diffusion VLAs aim to close.</li>
+                <li>Traditional max-confidence unmasking does not yet translate the natural schedule into consistent
+                    gains.</li>
+            </ol>
+
+            <h3>Future Steps</h3>
+            <ol>
+                <li><em>A time-causally ordered action tokenizer</em> producing temporally ordered, compact token
+                    representations.</li>
+                <li><em>A unified discrete diffusion VLA</em> in which observation reasoning and action generation
+                    share the same backbone.</li>
+                <li><em>An appropriate yet principled unmasking strategy</em> &mdash; emerging techniques such as
+                    AR-block decoding align better with the implicit autoregressive structure induced by RTC.</li>
+            </ol>
+        </section>
+
+        <!-- BIBTEX -->
+        <section class="glass-panel">
+            <h2>Citation</h2>
+            <div class="bibtex-box">
+                <button class="copy-btn" onclick="copyBibtex(this)">Copy</button>
+<pre>@inproceedings{wang2026discreterc,
   title     = {DiscreteRTC: Discrete Diffusion Policies are Natural Asynchronous Executors},
-  author    = {Pengcheng Wang, Kaiwen Hong, Chensheng Peng, Katherine Driggs-Campbell, Masayoshi Tomizuka, Chenfeng Xu, Chen Tang},
-  journal   = {ArXiv},
-  year      = {2026},
-}</code></pre>
-  </div>
-</section>
+  author    = {Wang, Pengcheng and Hong, Kaiwen and Peng, Chensheng and
+               Driggs-Campbell, Katherine and Tomizuka, Masayoshi and
+               Xu, Chenfeng and Tang, Chen},
+  booktitle = {Conference on Robot Learning (CoRL)},
+  year      = {2026}
+}</pre>
+            </div>
+        </section>
 
-
-<!-- ============================================================ -->
-<!-- Footer -->
-<!-- ============================================================ -->
-<footer class="footer">
-  <div class="container">
-    <div class="content has-text-centered">
-      <a class="icon-link" href="./static/paper.pdf">
-        <i class="fas fa-file-pdf"></i>
-      </a>
     </div>
-    <div class="columns is-centered">
-      <div class="column is-8">
-        <div class="content">
-          <p>
-            This website template is borrowed from the <a
-              href="https://github.com/nerfies/nerfies.github.io">Nerfies</a> project page, licensed
-            under a <a rel="license" href="http://creativecommons.org/licenses/by-sa/4.0/">Creative
-            Commons Attribution-ShareAlike 4.0 International License</a>.
-          </p>
-        </div>
-      </div>
-    </div>
-  </div>
-</footer>
 
+    <script>
+        // --- VANILLA TILT INIT ---
+        VanillaTilt.init(document.querySelectorAll("[data-tilt]"), {
+            max: 3,
+            speed: 400,
+            glare: true,
+            "max-glare": 0.1,
+        });
+
+        // --- RESULTS DATASETS (Kinetix figures) ---
+        const datasets = {
+            'main': {
+                src: "static/figures/experiments/kinetix/KinetixMain/KinetixMain.svg",
+                label: "Kinetix Main Results — solve rate & throughput across delays (Fig. 4)",
+                ar: "1049 / 435",
+                wide: false
+            },
+            'stepablation': {
+                src: "static/figures/experiments/kinetix/Step%26Ablation/Step%26Ablation.svg",
+                label: "Iterative Steps & Extended Variants (Fig. 5) — fewer steps + beats training-time RTC + composes with VLASH",
+                ar: "1043 / 435",
+                wide: false
+            },
+            'mainfull': {
+                src: "static/figures/experiments/kinetix/KinetixMainFull/KinetixMainFull.svg",
+                label: "Per-Environment Detailed Main Results (Appendix) — scroll horizontally for full detail",
+                ar: "1874 / 844",
+                wide: true
+            },
+            'finetune': {
+                src: "static/figures/experiments/kinetix/FinetuneApp/FinetuneApp.svg",
+                label: "Inpainting Fine-tuning Ablation — naive prefix-unmasking hurts (Appendix) — scroll horizontally",
+                ar: "1874 / 844",
+                wide: true
+            }
+        };
+
+        function updateResults(datasetKey, clickedBtn) {
+            const container = document.getElementById('results-display');
+            const data = datasets[datasetKey];
+
+            document.querySelectorAll('.dataset-btn').forEach(t => t.classList.remove('active'));
+            clickedBtn.classList.add('active');
+
+            container.style.opacity = '0';
+            setTimeout(() => {
+                const wideClass = data.wide ? ' wide' : '';
+                container.innerHTML = `
+                    <div class="result-item">
+                        <div class="fig-wrap${wideClass}" style="margin: 0; border: none; box-shadow: none; border-radius: 12px; --ar: ${data.ar};">
+                            <object data="${data.src}" type="image/svg+xml" aria-label="${data.label}"></object>
+                        </div>
+                        <div class="result-label">${data.label}</div>
+                    </div>
+                `;
+                container.style.opacity = '1';
+            }, 200);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const firstBtn = document.querySelector('.dataset-btn');
+            if (firstBtn) updateResults('main', firstBtn);
+        });
+
+        // --- BIBTEX COPY ---
+        function copyBibtex(btn) {
+            const pre = btn.nextElementSibling;
+            navigator.clipboard.writeText(pre.innerText).then(() => {
+                const orig = btn.innerText;
+                btn.innerText = 'Copied!';
+                setTimeout(() => { btn.innerText = orig; }, 1600);
+            });
+        }
+
+        // --- THREE.JS BACKGROUND ---
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+
+        const container3d = document.getElementById('canvas-container');
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        container3d.appendChild(renderer.domElement);
+
+        const particlesGeometry = new THREE.BufferGeometry();
+        const particlesCount = 700;
+        const posArray = new Float32Array(particlesCount * 3);
+
+        for (let i = 0; i < particlesCount * 3; i++) {
+            posArray[i] = (Math.random() - 0.5) * 15;
+        }
+
+        particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
+
+        const particlesMaterial = new THREE.PointsMaterial({
+            size: 0.025,
+            color: 0x8e2de2,
+            transparent: true,
+            opacity: 0.8,
+            blending: THREE.AdditiveBlending
+        });
+
+        const particlesMesh = new THREE.Points(particlesGeometry, particlesMaterial);
+        scene.add(particlesMesh);
+
+        camera.position.z = 3;
+
+        let mouseX = 0, mouseY = 0;
+        document.addEventListener('mousemove', (event) => {
+            mouseX = event.clientX / window.innerWidth - 0.5;
+            mouseY = event.clientY / window.innerHeight - 0.5;
+        });
+
+        const clock = new THREE.Clock();
+        function animate() {
+            requestAnimationFrame(animate);
+            const elapsedTime = clock.getElapsedTime();
+            particlesMesh.rotation.y = elapsedTime * 0.03;
+            particlesMesh.rotation.y += mouseX * 0.1;
+            particlesMesh.rotation.x += mouseY * 0.1;
+            renderer.render(scene, camera);
+        }
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
 </body>
+
 </html>
