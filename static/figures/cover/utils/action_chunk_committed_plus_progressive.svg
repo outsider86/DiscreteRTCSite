@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Standalone action chunk asset.
+  Geometry copied from DiscreteRTCSite/static/figures/methods/discreteRTC/discreteRTC.svg
+  (each cell 40x40, 3x3 token grid, tokens 12x12 at offsets (1,14,27)).
+
+  Cells 1-6 : all 9 tokens green (committed / unmasked).
+  Cells 7-10: same patterns as the upper chunk's intermediate region
+              (C3=8G/1Y, C4=6G/3Y, C5=3G/6Y, C6=1G/8Y).
+-->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 60"
+     font-family="'Times New Roman', 'CMU Serif', Georgia, serif"
+     font-weight="bold"
+     style="background:white">
+  <rect x="0" y="0" width="420" height="60" fill="white" />
+
+  <!-- ======================== Action chunk ======================== -->
+  <!-- chunk origin at (10,10); cells 40x40; tokens 12x12 at offsets +1/+14/+27 -->
+
+  <!-- Cell 1 (x=10..50) : all green -->
+  <rect x="11" y="11" width="12" height="12" fill="#2e8b57" /><rect x="24" y="11" width="12" height="12" fill="#2e8b57" /><rect x="37" y="11" width="12" height="12" fill="#2e8b57" />
+  <rect x="11" y="24" width="12" height="12" fill="#2e8b57" /><rect x="24" y="24" width="12" height="12" fill="#2e8b57" /><rect x="37" y="24" width="12" height="12" fill="#2e8b57" />
+  <rect x="11" y="37" width="12" height="12" fill="#2e8b57" /><rect x="24" y="37" width="12" height="12" fill="#2e8b57" /><rect x="37" y="37" width="12" height="12" fill="#2e8b57" />
+
+  <!-- Cell 2 (x=50..90) : all green -->
+  <rect x="51" y="11" width="12" height="12" fill="#2e8b57" /><rect x="64" y="11" width="12" height="12" fill="#2e8b57" /><rect x="77" y="11" width="12" height="12" fill="#2e8b57" />
+  <rect x="51" y="24" width="12" height="12" fill="#2e8b57" /><rect x="64" y="24" width="12" height="12" fill="#2e8b57" /><rect x="77" y="24" width="12" height="12" fill="#2e8b57" />
+  <rect x="51" y="37" width="12" height="12" fill="#2e8b57" /><rect x="64" y="37" width="12" height="12" fill="#2e8b57" /><rect x="77" y="37" width="12" height="12" fill="#2e8b57" />
+
+  <!-- Cell 3 (x=90..130) : all green -->
+  <rect x="91" y="11" width="12" height="12" fill="#2e8b57" /><rect x="104" y="11" width="12" height="12" fill="#2e8b57" /><rect x="117" y="11" width="12" height="12" fill="#2e8b57" />
+  <rect x="91" y="24" width="12" height="12" fill="#2e8b57" /><rect x="104" y="24" width="12" height="12" fill="#2e8b57" /><rect x="117" y="24" width="12" height="12" fill="#2e8b57" />
+  <rect x="91" y="37" width="12" height="12" fill="#2e8b57" /><rect x="104" y="37" width="12" height="12" fill="#2e8b57" /><rect x="117" y="37" width="12" height="12" fill="#2e8b57" />
+
+  <!-- Cell 4 (x=130..170) : all green -->
+  <rect x="131" y="11" width="12" height="12" fill="#2e8b57" /><rect x="144" y="11" width="12" height="12" fill="#2e8b57" /><rect x="157" y="11" width="12" height="12" fill="#2e8b57" />
+  <rect x="131" y="24" width="12" height="12" fill="#2e8b57" /><rect x="144" y="24" width="12" height="12" fill="#2e8b57" /><rect x="157" y="24" width="12" height="12" fill="#2e8b57" />
+  <rect x="131" y="37" width="12" height="12" fill="#2e8b57" /><rect x="144" y="37" width="12" height="12" fill="#2e8b57" /><rect x="157" y="37" width="12" height="12" fill="#2e8b57" />
+
+  <!-- Cell 5 (x=170..210) : all green -->
+  <rect x="171" y="11" width="12" height="12" fill="#2e8b57" /><rect x="184" y="11" width="12" height="12" fill="#2e8b57" /><rect x="197" y="11" width="12" height="12" fill="#2e8b57" />
+  <rect x="171" y="24" width="12" height="12" fill="#2e8b57" /><rect x="184" y="24" width="12" height="12" fill="#2e8b57" /><rect x="197" y="24" width="12" height="12" fill="#2e8b57" />
+  <rect x="171" y="37" width="12" height="12" fill="#2e8b57" /><rect x="184" y="37" width="12" height="12" fill="#2e8b57" /><rect x="197" y="37" width="12" height="12" fill="#2e8b57" />
+
+  <!-- Cell 6 (x=210..250) : all green -->
+  <rect x="211" y="11" width="12" height="12" fill="#2e8b57" /><rect x="224" y="11" width="12" height="12" fill="#2e8b57" /><rect x="237" y="11" width="12" height="12" fill="#2e8b57" />
+  <rect x="211" y="24" width="12" height="12" fill="#2e8b57" /><rect x="224" y="24" width="12" height="12" fill="#2e8b57" /><rect x="237" y="24" width="12" height="12" fill="#2e8b57" />
+  <rect x="211" y="37" width="12" height="12" fill="#2e8b57" /><rect x="224" y="37" width="12" height="12" fill="#2e8b57" /><rect x="237" y="37" width="12" height="12" fill="#2e8b57" />
+
+  <!-- Cell 7 (x=250..290) : C3 pattern  8G 1Y, Y at (row1,col2) -->
+  <rect x="251" y="11" width="12" height="12" fill="#2e8b57" /><rect x="264" y="11" width="12" height="12" fill="#2e8b57" /><rect x="277" y="11" width="12" height="12" fill="#2e8b57" />
+  <rect x="251" y="24" width="12" height="12" fill="#2e8b57" /><rect x="264" y="24" width="12" height="12" fill="#2e8b57" /><rect x="277" y="24" width="12" height="12" fill="#e8d810" />
+  <rect x="251" y="37" width="12" height="12" fill="#2e8b57" /><rect x="264" y="37" width="12" height="12" fill="#2e8b57" /><rect x="277" y="37" width="12" height="12" fill="#2e8b57" />
+
+  <!-- Cell 8 (x=290..330) : C4 pattern  6G 3Y, Y at (0,1)(1,2)(2,0) -->
+  <rect x="291" y="11" width="12" height="12" fill="#2e8b57" /><rect x="304" y="11" width="12" height="12" fill="#e8d810" /><rect x="317" y="11" width="12" height="12" fill="#2e8b57" />
+  <rect x="291" y="24" width="12" height="12" fill="#2e8b57" /><rect x="304" y="24" width="12" height="12" fill="#2e8b57" /><rect x="317" y="24" width="12" height="12" fill="#e8d810" />
+  <rect x="291" y="37" width="12" height="12" fill="#e8d810" /><rect x="304" y="37" width="12" height="12" fill="#2e8b57" /><rect x="317" y="37" width="12" height="12" fill="#2e8b57" />
+
+  <!-- Cell 9 (x=330..370) : C5 pattern  3G 6Y, G at (0,1)(1,2)(2,0) -->
+  <rect x="331" y="11" width="12" height="12" fill="#e8d810" /><rect x="344" y="11" width="12" height="12" fill="#2e8b57" /><rect x="357" y="11" width="12" height="12" fill="#e8d810" />
+  <rect x="331" y="24" width="12" height="12" fill="#e8d810" /><rect x="344" y="24" width="12" height="12" fill="#e8d810" /><rect x="357" y="24" width="12" height="12" fill="#2e8b57" />
+  <rect x="331" y="37" width="12" height="12" fill="#2e8b57" /><rect x="344" y="37" width="12" height="12" fill="#e8d810" /><rect x="357" y="37" width="12" height="12" fill="#e8d810" />
+
+  <!-- Cell 10 (x=370..410) : C6 pattern  1G 8Y, G only at (0,2) -->
+  <rect x="371" y="11" width="12" height="12" fill="#e8d810" /><rect x="384" y="11" width="12" height="12" fill="#e8d810" /><rect x="397" y="11" width="12" height="12" fill="#2e8b57" />
+  <rect x="371" y="24" width="12" height="12" fill="#e8d810" /><rect x="384" y="24" width="12" height="12" fill="#e8d810" /><rect x="397" y="24" width="12" height="12" fill="#e8d810" />
+  <rect x="371" y="37" width="12" height="12" fill="#e8d810" /><rect x="384" y="37" width="12" height="12" fill="#e8d810" /><rect x="397" y="37" width="12" height="12" fill="#e8d810" />
+
+  <!-- Outer frame + per-cell dividers -->
+  <rect x="10" y="10" width="400" height="40" fill="none" stroke="#888" stroke-width="1.5" />
+  <line x1="50"  y1="10" x2="50"  y2="50" stroke="#888" stroke-width="1.2" />
+  <line x1="90"  y1="10" x2="90"  y2="50" stroke="#888" stroke-width="1.2" />
+  <line x1="130" y1="10" x2="130" y2="50" stroke="#888" stroke-width="1.2" />
+  <line x1="170" y1="10" x2="170" y2="50" stroke="#888" stroke-width="1.2" />
+  <line x1="210" y1="10" x2="210" y2="50" stroke="#888" stroke-width="1.2" />
+  <line x1="250" y1="10" x2="250" y2="50" stroke="#888" stroke-width="1.2" />
+  <line x1="290" y1="10" x2="290" y2="50" stroke="#888" stroke-width="1.2" />
+  <line x1="330" y1="10" x2="330" y2="50" stroke="#888" stroke-width="1.2" />
+  <line x1="370" y1="10" x2="370" y2="50" stroke="#888" stroke-width="1.2" />
+</svg>

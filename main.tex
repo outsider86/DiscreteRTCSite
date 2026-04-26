@@ -36,7 +36,6 @@
 
 \begin{document}
 \maketitle
-\vspace{-2em}
 %===============================================================================
 
 \begin{abstract}
@@ -58,8 +57,13 @@ More visualizations are on our \href{https://outsider86.github.io/DiscreteRTCSit
 
 \begin{figure}[!ht]
     \centering
-    \includegraphics[width=\linewidth]{figures/PnPcover3.png}
-    \caption{\textbf{RTC with discrete diffusion policies solving dynamic manipulation.}}
+    \includegraphics[width=\linewidth]{figures/cover.pdf}
+    \caption{\textbf{Async Execution with discrete diffusion policies solving dynamic manipulation.}
+    Gray rectangles and blocks represent the action chunks and the actions. 
+    Yellow and green cubes represent the masked and unmasked action tokens.
+    During each inference cycle, discrete diffusion policies copy the tail of the last action chunk as the committed prefix, and inpaint upon it by simply forwardin itself.
+    Compared with flow-matching-based inpainting that relies on $\Pi$GDM, discrete-diffusion-based inpainting inference is simper to implement, faster at inference, and better at execution.
+    }
     \label{fig:cover}
     \vskip -0.2in
 \end{figure}
@@ -67,6 +71,7 @@ More visualizations are on our \href{https://outsider86.github.io/DiscreteRTCSit
 
 
 %===============================================================================
+\newpage
 \section{Introduction}
 \label{sec:intro}
 
@@ -94,7 +99,6 @@ Therefore, asynchronous execution---\emph{thinking while acting} over action chu
 However, naive async strategies, whether switching chunks immediately or smoothing them via temporal ensembling~\citep{zhao2023learning}, introduce inter-chunk discontinuity or invalid actions because each new chunk is generated in isolation from the committed actions.
 Real-time chunking (RTC)~\citep{black2025real} resolves this by recasting chunk transitions as an \emph{inpainting} problem: freezing committed actions from the previous chunk and consistently generating the remainder, representing a simple yet effective approach that has achieved great success in precise and smooth real-world manipulation~\citep{intelligence2025pi_06, intelligence2026pi}.
 
-\newpage
 % [PARA 3] RTC with flow-matching is suboptimal; we can do better.
 % [SENT] RTC with flow-matching is limited
 Specifically, RTC is specially designed for flow-matching policies~\citep{lipman2022flow}.
@@ -232,15 +236,14 @@ As illustrated in Figure~\ref{fig:continuousRTC}, we analyze four critical limit
 % [SENT] standard training uses uniform noise level
 Pre-training of flow-matching policies~\citep{lipman2022flow} learns to generate action chunks conditioned on observations and a noised action chunk.
 % [SENT] all actions share the same noise level during training
-During training, all actions within a chunk are corrupted at the \textbf{consistent} noise level $\tau$ and are denoised together under the same computational budget.
+During training, all actions within a chunk are corrupted at the \textbf{consistent} noise level $\tau$ and are denoised together.
 % [SENT] RTC requires mixed noise levels across the chunk
-However, during RTC, the generation process starts from an action chunk with \textbf{inconsistent} noise levels across positions: 0 for the committed actions, 1 for the new actions, and interpolated values for the intermediate actions.
+However, during RTC, the inpainting starts from an action chunk with \textbf{inconsistent} noise levels across positions: 0 for the committed actions, 1 for the new actions, and interpolated values for the intermediate actions.
 % [SENT] guidance is external and unseen during pre-training
-Although the $\Pi$GDM~\citep{song2023pseudoinverse} guidance provides an external correction at inference time for effective inpainting, the model has encountered neither such corrections nor the mixed-noise chunk pattern during the pre-training stage.
+Although the $\Pi$GDM~\citep{song2023pseudoinverse} guidance provides an external correction at inference time, the model has encountered neither such corrections nor the mixed-noise chunk pattern during the pre-training stage.
 % [SENT] scaling pre-training does not help inpainting
-As a result, scaling up pre-training data or model capacity does not directly improve inpainting quality for asynchronous execution.
+As a result, scaling up pre-training data or model capacity does not directly improve inpainting quality.
 
-\newpage
 \subsection{Fine-tuning Required}
 \label{sec:lim_finetuning}
 % [PARA] Closing the pre-training gap requires a dedicated fine-tuning stage with mixed-noise chunks.
@@ -249,9 +252,7 @@ Following Sec.~\ref{sec:lim_pretrain}, to improve the inpainting capability of t
 % [SENT] fine-tuning adds complexity and may hurt base quality
 This requires fine-tuning the model with an explicit inpainting loss~\citep{black2025training}, adding training complexity and risking interference with the base generation quality~\citep{wang2026real}.
 % [SENT] engineering and compute burden for large VLAs
-This introduces a non-trivial additional engineering and computational burden, particularly for large VLAs that are already expensive to fine-tune.
-% [SENT] large-scale pre-training may demand large-scale fine-tuning
-Moreover, the fine-tuning recipe itself must be carefully designed~\citep{hu2022lora}: for models pre-trained at large scale, a correspondingly large-scale fine-tuning effort may be necessary to reliably acquire the inpainting capability without degrading other abilities~\citep{wang2026real}.
+This introduces a non-trivial additional engineering and computational burden, particularly for large VLAs that are expensive~\citep{hu2022lora} or even risky to fine-tune without degrading the base generation abilities~\citep{wang2026real}.
 
 \subsection{Heuristic Guidance}
 \label{sec:lim_guidance}
@@ -267,7 +268,7 @@ Completing Equation~\ref{eq:guidance}, the full denoising step of $\Pi$GDM is pr
 % [SENT] soft masking uses a hand-designed exponential decay
 Notably, the soft-masking weights $W$ in Equation~\ref{eqn: continuousRTC forward} follow a hand-crafted exponential decay schedule.
 % [SENT] the schedule is fixed and only empirically validated
-This important guidance schedule, which decides how to follow the previous action chunks, is fixed across different inference situations (e.g., varying delays, execution horizons, and tasks) and is validated only through empirical studies.
+This important guidance schedule, which decides how to follow the previous action chunks, is fixed across different inference situations and is validated only through empirical studies.
 % [SENT] tuning burden across configurations
 This heuristic design not only creates a tuning burden, but also behaves inflexibly in response to different inference cases during asynchronous execution.
 
@@ -303,13 +304,13 @@ In discrete diffusion, inpainting is the native operation: given a partially mas
 % [SENT] resolves (a): pre-training directly improves inpainting
 Therefore, pre-training directly improves the model's ability to inpaint at inference time: scaling model, data, and pre-training conputation yield better asynchronous execution without inpainting-specific fine-tuning.
 % [SENT] no modification needed for inpainting
-To inpaint at inference time, no extra implementation, loss term, or inference-time guidance are needed. Unlike Equation~\ref{eqn: continuousRTC forward}, the model generates conditioned on partially unmasked token sequence from last inference, exactly as it was trained --- simply forwarding the base policy:
+To inpaint at inference time, no extra implementation, loss term, or inference-time guidance are needed: 
 \begin{equation}
     \label{eq:discrete_rtc_forward}
     \mathbf{A}_t^{k+1} = \pi(\mathbf{A}_t^k, \mathbf{o}_t).
 \end{equation}
 
-
+Unlike Equation~\ref{eqn: continuousRTC forward}, the model generates conditioned on partially unmasked token sequence from last inference, exactly as it was trained --- simply forwarding the base policy.
 
 \subsection{Natural Guidance}
 \label{sec:method_netural}
@@ -323,7 +324,7 @@ To solve the guidance issue, we exploit a key property of discrete diffusion: on
 This stands in contrast to continuous diffusion or flow-matching, where the denoised action chunk becomes valid and executable all together only when the noise level reaches zero at the end of the denoising process. 
 Therefore, with discrete diffusion, the model can not only start inference from an intermediate state (e.g. a partially unmasked action chunk with prefix), but also terminate at an intermediate stage. 
 
-During async execution, to ensure valid execution before the next inference, only the next $s$ actions after the first $d$ commited actions are necessary to be fully unmasked. Therefore, the inference can early-exit when satisfying the minimal criteria, leaving the remaining $H - d - s$ actions a partially unmasked pattern. By directly carrying over the results, this pattern serves as a \emph{natural and adaptive} guidance signal for the next inference with the number of the unmasked tokens, replacing the heuristic and fixed guidance schedule in flow-matching basd RTC.
+To ensure valid execution before the next inference, only the next $s$ actions after the commited actions are necessary to be fully unmasked. Therefore, the inference can early-exit when satisfying the minimal criteria, leaving the remaining actions a partially unmasked pattern. By carrying over the results, this pattern serves as a \emph{natural and adaptive} guidance for the next inference with the number of the unmasked tokens, replacing the heuristic and fixed guidance in flow-matching RTC.
 % [SENT] both intermediate start and early stop are possible
 
 % [PARA] Early stopping provides natural guidance and reduces cost.
@@ -345,13 +346,13 @@ Alternatively, we can keep the number of inference steps fixed and reduce the nu
 %===============================================================================
 \begin{figure}
     \centering
-    \includegraphics[width=\linewidth]{figures/KinetixMain.pdf}
+    \includegraphics[width=0.9\linewidth]{figures/KinetixMain.pdf}
     \caption{\textbf{Experimental Results in Kinetix.} The throughputs represent the task completed by the policy every 256 steps.
     \textbf{Left}: Average solve rate and throughputs across all environments with different inference delays;
     \textbf{Right}: Solve rates for every tasks with different inference delays.
     The executions horizon follows $s = \max(1, d)$ and each datapoint represents 2048 trials.}
     \label{fig:kinetix_main}
-    \vskip -0.15in
+    \vskip -0.2in
 \end{figure}
 
 \section{Experiments}
@@ -376,10 +377,8 @@ Alternatively, we can keep the number of inference steps fixed and reduce the nu
 % [SENT] quasi-static benchmarks are insufficient
 % [SENT] we use dynamic tasks with force-based control
 We first evaluate DiscreteRTC in Kinetix~\citep{matthews2024kinetix}, a simulated benchmark of dynamic tasks.
-% [SENT] tasks involve dynamic motions
-All tasks involve dynamic motions such as throwing, catching, and balancing.
 % [SENT] Gaussian noise makes closed-loop corrections critical
-To simulate imperfect actuation, we add Gaussian noise to the actions to make closed-loop corrections crucial for success~\citep{wang2026real}. Please refer to Appendix~\ref{app: addexp} for more results.
+To simulate imperfect actuation, we add Gaussian noise to the actions to make closed-loop corrections crucial for success~\citep{wang2026real}. Please refer to Appendix~\ref{app: addexp} for additional experimental results.
 
 % [PARA] Data generation and policy training.
 % [SENT] expert policies via RL
@@ -426,11 +425,11 @@ Please refer to Appendix~\ref{app: simexp} for more details.
 
 \begin{figure}
     \centering
-    \includegraphics[width=\linewidth]{figures/Step&Ablation.pdf}
-    \caption{\textbf{Extend Experimental Results in Kinetix.} The evaluation setup keeps the same with Figure~\ref{fig:kinetix_main}.
-    \textbf{Left}: Required iterative steps of different poliicy architectures in Kinetix with $s = \max(1, d)$;
-    \textbf{Right}: Average solve rates of extended variants in Kinetix.
-    }
+    \includegraphics[width=0.9\linewidth]{figures/Step&Ablation.pdf}
+    \caption{\textbf{Extend Experimental Results in Kinetix.}
+    \textbf{Left}: Required interative steps for each inpainting inference of different policy architectures in Kinetix with $s = \max(1, d)$;
+    \textbf{Right}: Average solve rates of extended variants in Kinetix. The evaluation setup keeps the same with Figure~\ref{fig:kinetix_main}.
+    } 
     \label{fig:step_ablation}
     \vskip -0.2in
 \end{figure}
@@ -700,7 +699,7 @@ This observation motivates the third direction in our future steps---designing a
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=\linewidth]{figures/FinetunedApp.pdf}
+    \includegraphics[width=\linewidth]{figures/FinetuneApp.pdf}
     \caption{\textbf{Fine-tuning Ablation in Kinetix.} The evaluation setup keeps the same with Figure~\ref{fig:kinetix_main}. The small plots represent the results per Kinetix environment}
     \label{fig:ft_ablation}
     \vskip -0.1in

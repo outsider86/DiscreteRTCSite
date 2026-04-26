@@ -37,7 +37,7 @@
             --accent-hover: #2575fc;
             --code-bg: rgba(245, 245, 245, 0.8);
             --good: #10b981;
-            --bad: #ef4444;
+            --bad: #b8860b;
         }
 
         /* --- RESET & BASE --- */
@@ -344,7 +344,7 @@
 
         .lim-col-header.bad {
             color: var(--bad);
-            background: rgba(239, 68, 68, 0.08);
+            background: rgba(231, 199, 95, 0.18);
         }
 
         .lim-col-header.good {
@@ -364,15 +364,15 @@
         .lim-card .lim-tag {
             display: inline-block;
             font-family: 'Courier New', monospace;
-            font-size: 0.75rem;
+            font-size: 1.1rem;
             font-weight: 700;
-            padding: 2px 7px;
-            border-radius: 4px;
-            margin-right: 0.5rem;
+            padding: 4px 12px;
+            border-radius: 6px;
+            margin-right: 0.7rem;
         }
 
         .lim-card .lim-tag.bad {
-            background: rgba(239, 68, 68, 0.15);
+            background: rgba(231, 199, 95, 0.3);
             color: var(--bad);
         }
 
@@ -384,7 +384,7 @@
         .lim-card .lim-title {
             font-weight: 700;
             display: inline;
-            font-size: 0.98rem;
+            font-size: 1.3rem;
         }
 
         .lim-card .lim-body {
@@ -456,6 +456,15 @@
             font-size: 0.85rem;
             color: var(--text-secondary);
             line-height: 1.4;
+        }
+        .stat-card .stat-tag {
+            margin-top: 0.7rem;
+            font-size: 1.15rem;
+            font-weight: 800;
+            letter-spacing: 0.01em;
+            background: -webkit-linear-gradient(135deg, var(--accent), var(--accent-hover));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         /* --- RESULTS GRID & SELECTOR --- */
@@ -713,11 +722,15 @@
 
         <!-- COVER / TEASER (Fig. 1 in paper) -->
         <section class="glass-panel">
-            <div class="fig-wrap" style="margin: 0; --ar: 1000 / 490;">
-                <object data="static/figures/methods/cover/cover.svg" type="image/svg+xml" aria-label="RTC with discrete diffusion policies solving dynamic manipulation"></object>
+            <div class="fig-wrap" style="margin: 0; --ar: 590 / 301;">
+                <img src="static/figures/cover/cover.png" alt="Async execution with discrete diffusion policies solving dynamic manipulation.">
             </div>
             <p class="fig-caption" style="margin-bottom: 0; margin-top: 1rem;">
-                <b>Figure 1:</b> RTC with discrete diffusion policies solving dynamic manipulation.
+                <b>Figure 1: Async Execution with discrete diffusion policies solving dynamic manipulation.</b>
+                Gray rectangles and blocks represent the action chunks and the actions.
+                Yellow and green cubes represent the masked and unmasked action tokens.
+                During each inference cycle, discrete diffusion policies copy the tail of the last action chunk as the committed prefix, and inpaint upon it by simply forwarding itself.
+                Compared with flow-matching-based inpainting that relies on $\Pi$GDM, discrete-diffusion-based inpainting inference is simpler to implement, faster at inference, and better at execution.
             </p>
         </section>
 
@@ -725,29 +738,31 @@
         <section class="glass-panel" data-tilt data-tilt-max="2" data-tilt-glare data-tilt-max-glare="0.05">
             <h2>TL;DR</h2>
             <p style="font-size: 1.1rem; font-weight: 500; margin-bottom: 0;">
-                Unlike chatbots, physical AI must act while the world keeps evolving &mdash; so async execution is a
-                <em>structural requirement</em>, not a latency optimization. Discrete diffusion policies are
-                <em>natural asynchronous executors</em>: native unmasking replaces external corrections, making
-                real-time chunking <b>fine-tuning-free</b>, <b>faster at inference</b>, and <b>more accurate</b>
-                than flow-matching RTC.
+                Flow-matching-based real-time chunking (RTC) is ill-suited for asynchronous execution due to four critical limitations.
+                By replacing the action head with a discrete diffusion policy, all the aforementioned limitations can be resolved at once, 
+                being simpler to implement, faster at inference, and better at execution.
+                Or, to put it simply: <em><b>Discrete diffusion policies are natural asynchronous executors.</b></em>
+            </p>
+
+            <p>
+                During asynchronous execution, discrete diffusion policy is:
             </p>
 
             <div class="stat-grid">
                 <div class="stat-card">
-                    <div class="stat-value">+50pp</div>
-                    <div class="stat-label">Dynamic Pick success vs. Continuous RTC (95% vs. 45%)</div>
+                    <div class="stat-value" style="font-size: 1.4rem;">0 lines of code</div>
+                    <div class="stat-label">to implement the inpainting-specific inference for async execution</div>
+                    <div class="stat-tag">Simpler to Implement</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">~0.7&times;</div>
-                    <div class="stat-label">Inference time vs. discrete sync base (206 / 303 ms)</div>
+                    <div class="stat-value" style="font-size: 1.4rem;">~0.7&times; Inference Cost</div>
+                    <div class="stat-label">compared with ~1.7&times; for inference with flow-matching-based RTC</div>
+                    <div class="stat-tag">Faster at Inference</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-value">0</div>
-                    <div class="stat-label">Inpainting-specific fine-tuning steps</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">4 / 4</div>
-                    <div class="stat-label">Limitations of flow-matching RTC resolved</div>
+                    <div class="stat-value" style="font-size: 1.4rem;">+50% Succ. Rate</div>
+                    <div class="stat-label">on real-world dynamic pick vs. flow-matching-based RTC (95% vs. 45%)</div>
+                    <div class="stat-tag">Better at Execution</div>
                 </div>
             </div>
         </section>
@@ -760,7 +775,7 @@
                 synchronous executors is fatal for dynamic tasks &mdash; regardless of how fast the inference is.
                 Asynchronous execution &mdash; <em>thinking while acting</em> &mdash; is therefore a structural
                 requirement, and real-time chunking (RTC) makes it viable by recasting chunk transitions as
-                inpainting: freezing committed actions and consistently generating the remainder.
+                inpainting: freezing committed actions and consistently generating the rest.
             </p>
             <p>
                 However, RTC with a flow-matching policy is structurally suboptimal: its inpainting comes from
@@ -769,19 +784,15 @@
             </p>
             <p>
                 In this work, we observe that <b>discrete diffusion policies</b>, which generate actions by
-                iteratively unmasking, are <em>natural asynchronous executors that resolve all limitations at once</em>:
+                iteratively unmasking, are <b>natural asynchronous executors that resolve all limitations at once</b>:
                 they are fine-tuning free since inpainting is their native operation, while early stopping further
-                provides adaptive guidance and reduces inference cost. We propose <b>DiscreteRTC</b>, which replaces
-                external corrections with native unmasking, and show on dynamic simulated benchmarks and real-world
-                dynamic manipulation tasks that it achieves higher success rates than continuous RTC and other
-                baselines &mdash; while being simpler to implement, faster at inference, and better at execution.
+                provides adaptive guidance and reduces inference cost.
             </p>
-            <div class="fig-wrap" style="--ar: 729 / 507;">
-                <object data="static/figures/methods/asyncInference/asyncInference.svg" type="image/svg+xml" aria-label="Asynchronous inference overview"></object>
-            </div>
-            <p class="fig-caption">
-                <b>Overview:</b> while the base policy keeps thinking, the robot keeps acting on previously committed
-                tokens. RTC poses each chunk transition as an inpainting problem.
+            <p>
+                We propose <b>DiscreteRTC</b>, which replaces external corrections with native unmasking, and show on
+                dynamic simulated benchmarks and real-world dynamic manipulation tasks that it achieves higher success
+                rates than continuous RTC and other baselines &mdash; while being simpler to implement, faster at
+                inference, and better at execution.
             </p>
         </section>
 
@@ -796,30 +807,26 @@
                 base policy.</em>
             </p>
 
-            <div class="fig-wrap" style="--ar: 780 / 340;">
-                <object data="static/figures/methods/continuousRTC/continuousRTC.svg" type="image/svg+xml" aria-label="Limitations of continuous RTC with flow-matching head"></object>
-            </div>
-            <p class="fig-caption">
-                <b>Figure 2:</b> RTC with a flow-matching head. Color encodes noise level (green = clean, yellow =
-                pure noise). The flow-matching head is ill-suited for RTC because (a) the base policy is never
-                pre-trained on inpainting; (b) acquiring this capability demands a dedicated fine-tuning stage; (c)
-                inference-time inpainting relies on a heuristic guidance weight schedule; and (d) the gradient
-                correction roughly doubles per-step cost.
-            </p>
-
-            <h4>$\Pi$GDM Inference Step</h4>
-            <p>The full denoising step of $\Pi$GDM augments the velocity field with a gradient correction toward the frozen prefix $\mathbf{Y}$:</p>
-            <div class="eq-box">
-                \[ \mathbf{A}_t^{\tau+\frac{1}{n}} = \mathbf{A}_t^\tau + \frac{1}{n}\!\left( v_\pi(\mathbf{A}_t^\tau, \mathbf{o}_t, \tau) + \underbrace{\min\!\left(\beta,\,\tfrac{1-\tau}{\tau\,r_\tau^2}\right)\!\left(\mathbf{Y} - \hat{f}_{\mathbf{A}^1}(\mathbf{A}^\tau)\right)^{\!\top}\!\mathrm{diag}(\mathbf{W})\,\frac{\partial \hat{f}_{\mathbf{A}^1}}{\partial \mathbf{A}'}\bigg|_{\mathbf{A}^\tau}}_{\Pi\text{GDM gradient correction}} \right) \] </div>
-
             <div class="viz-wrap">
-                <div class="viz-label">Interactive Visualization &mdash; Continuous RTC (Flow-Matching)</div>
+                <div class="viz-label">Continuous RTC (Flow-Matching)</div>
                 <iframe class="viz-iframe" src="static/visualizations/continuousRTC.html"></iframe>
             </div>
 
             <h3 style="text-align: center; margin-top: 2rem; border-bottom: 2px solid var(--bad); display: inline-block; padding-bottom: 0.3rem;">
                 Four Critical Limitations
             </h3>
+
+            <div class="fig-wrap" style="--ar: 780 / 340;">
+                <object data="static/figures/methods/continuousRTC/continuousRTC.svg" type="image/svg+xml" aria-label="Limitations of continuous RTC with flow-matching head"></object>
+            </div>
+            <p class="fig-caption">
+                <b>Figure 2:</b> RTC with a flow-matching head. Color encodes noise level (green = clean, yellow =
+                pure noise).
+            </p>
+
+            <h4>Inpainting with Flow-matching</h4>
+            <div class="eq-box">
+                \[ \mathbf{A}_t^{\tau+\frac{1}{n}} = \mathbf{A}_t^\tau + \frac{1}{n}\!\left( v_\pi(\mathbf{A}_t^\tau, \mathbf{o}_t, \tau) + \underbrace{\min\!\left(\beta,\,\tfrac{1-\tau}{\tau\,r_\tau^2}\right)\!\left(\mathbf{Y} - f_{\mathbf{A}^1}(\mathbf{A}^\tau)\right)^{\!\top}\!\mathrm{diag}(\mathbf{W})\,\frac{\partial f_{\mathbf{A}^1}}{\partial \mathbf{A}'}\bigg|_{\mathbf{A}^\tau}}_{\Pi\text{GDM gradient correction}} \right) \] </div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
                 <div class="lim-card">
                     <span class="lim-tag bad">a</span><span class="lim-title">Pre-training without Inpainting</span>
@@ -848,32 +855,30 @@
                 replacing the action head with a discrete diffusion policy resolves all four limitations at once.
                 In discrete diffusion, <em>inpainting is the native operation</em> &mdash; given a partially masked
                 token sequence, the policy reconstructs the target chunk by predicting the masked tokens, identical
-                to standard masked generation. Place committed tokens at the right index and inpainting reduces to a
-                single forward pass of the base policy:
-            </p>
-            <div class="eq-box">
-                $\mathbf{A}_t^{k+1} = \pi(\mathbf{A}_t^k, \mathbf{o}_t)$
-            </div>
-
-            <div class="fig-wrap" style="--ar: 780 / 340;">
-                <object data="static/figures/methods/discreteRTC/discreteRTC.svg" type="image/svg+xml" aria-label="Discrete RTC: native unmasking resolves all four limitations"></object>
-            </div>
-            <p class="fig-caption">
-                <b>Figure 3:</b> RTC with a discrete diffusion head. Color encodes masking status (green = unmasked,
-                yellow = masked). The discrete diffusion head is naturally suited for RTC because (a) the base policy
-                is already pre-trained on inpainting; (b) no inpainting-specific fine-tuning is needed; (c) early
-                stopping leaves a natural, adaptive guidance signal; and (d) fewer tokens are unmasked per step,
-                reducing inference cost.
+                to standard masked generation.
             </p>
 
             <div class="viz-wrap">
-                <div class="viz-label">Interactive Visualization &mdash; Discrete RTC (Ours)</div>
+                <div class="viz-label">Discrete RTC (Ours)</div>
                 <iframe class="viz-iframe" src="static/visualizations/discreteRTC.html"></iframe>
             </div>
 
             <h3 style="text-align: center; margin-top: 2.5rem; border-bottom: 2px solid var(--good); display: inline-block; padding-bottom: 0.3rem;">
                 All Resolved at Once
             </h3>
+
+            <div class="fig-wrap" style="--ar: 780 / 340;">
+                <object data="static/figures/methods/discreteRTC/discreteRTC.svg" type="image/svg+xml" aria-label="Discrete RTC: native unmasking resolves all four limitations"></object>
+            </div>
+            <p class="fig-caption">
+                <b>Figure 3:</b> RTC with a discrete diffusion head. Color encodes masking status (green = unmasked,
+                yellow = masked).
+            </p>
+
+            <h4>Inpainting with Discrete Diffusion</h4>
+            <div class="eq-box">
+                \[ \mathbf{A}_t^{k+1} = \pi(\mathbf{A}_t^k, \mathbf{o}_t) \]
+            </div>
 
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 1rem;">
                 <div class="lim-card">
@@ -901,25 +906,22 @@
 
             <h3 style="margin-top: 0;">5.1 &nbsp;Simulated Benchmark: Kinetix</h3>
             <p>
-                We evaluate DiscreteRTC on Kinetix &mdash; a simulated benchmark of dynamic tasks involving throwing,
-                catching, and balancing. Gaussian actuation noise is added to make closed-loop corrections critical
-                for success. We build directly on the official RTC codebase and datasets, share the same training
-                setup and policy network size between flow-matching and discrete diffusion policies (the only
-                difference is the final logits layer), and use a trivial $512$-bin quantization for action
-                discretization. Each datapoint averages 2,048 trials.
+                We evaluate DiscreteRTC on Kinetix &mdash; a dynamic-task benchmark where added Gaussian actuation
+                noise makes closed-loop corrections critical. Built on the official RTC codebase, the flow-matching
+                and discrete diffusion policies share the same architecture (only the final logits layer differs)
+                and use a trivial $512$-bin action quantization; each datapoint averages 2,048 trials.
             </p>
 
             <h4>Baselines (same architecture, different async strategies)</h4>
             <ul>
-                <li><b>Naive Async</b> &mdash; chunks generated from scratch and switched when the new one is ready.</li>
-                <li><b>BID</b> (Bidirectional Decoding) &mdash; rejection sampling for cross-chunk continuity (batch size $N{=}16$, no weak policy).</li>
-                <li><b>RTC</b> &mdash; flow-matching with $\Pi$GDM inpainting and soft masking, the current SOTA for continuous policies.</li>
-                <li><b>Training-time Continuous RTC</b> &mdash; flow-matching fine-tuned with an explicit inpainting recipe.</li>
-                <li><b>DiscreteRTC + Fixed Steps</b> &mdash; same compute budget, finer-grained unmasking for higher action resolution.</li>
-                <li><b>DiscreteVLASH</b> &mdash; integrates VLASH future-state estimation atop DiscreteRTC.</li>
+                <li><b>Naive Async</b> &mdash; chunks regenerated from scratch, switched when ready.</li>
+                <li><b>BID</b> &mdash; rejection sampling for cross-chunk continuity ($N{=}16$, no weak policy).</li>
+                <li><b>RTC</b> &mdash; flow-matching with $\Pi$GDM inpainting + soft masking (continuous-policy SOTA).</li>
             </ul>
-
-            <p>Select a view of the Kinetix results below.</p>
+            <p style="color: var(--text-secondary); font-size: 0.95rem; margin-top: 0.5rem;">
+                Three additional variants are introduced under <b>Extended Results</b> below
+                (<em>Training-time Continuous RTC</em>, <em>DiscreteRTC + Fixed Steps</em>, <em>DiscreteVLASH</em>).
+            </p>
 
             <div class="results-grid" id="results-display">
                 <!-- Injected via JS -->
@@ -927,36 +929,27 @@
 
             <div class="dataset-selector" id="dataset-selector">
                 <button class="dataset-btn active" onclick="updateResults('main', this)">Main Results</button>
-                <button class="dataset-btn" onclick="updateResults('stepablation', this)">Steps &amp; Ablations</button>
+                <button class="dataset-btn" onclick="updateResults('stepablation', this)">Extended Results</button>
                 <button class="dataset-btn" onclick="updateResults('mainfull', this)">Per-Env Detail</button>
                 <button class="dataset-btn" onclick="updateResults('finetune', this)">Fine-tuning Ablation</button>
             </div>
 
             <p>
-                Under different inference delays, DiscreteRTC consistently outperforms ContinuousRTC and other
-                variants on both solve rates and throughputs &mdash; demonstrating the advantage of native inpainting
-                in discrete diffusion. Three further observations emerge from the extended results:
+                Across delays, DiscreteRTC consistently beats ContinuousRTC and other variants on both solve rate
+                and throughput. Three further takeaways from the extended results:
                 <em>(1)</em> DiscreteRTC outperforms <b>Training-time Continuous RTC</b> despite being fine-tuning
-                free, showing that explicit inpainting recipes are not the only path forward;
-                <em>(2)</em> with the same compute budget, <b>DiscreteRTC + Fixed Steps</b> generates more
-                fine-grained actions and lifts performance further;
-                <em>(3)</em> integrating <b>VLASH</b> stabilizes performance across varying delays at a small cost
-                under low delay &mdash; showing DiscreteRTC composes seamlessly with advanced inference-time methods.
+                free; <em>(2)</em> at the same compute, <b>DiscreteRTC + Fixed Steps</b> lifts performance via
+                finer-grained actions; <em>(3)</em> <b>DiscreteVLASH</b> stabilizes performance across delays at a
+                small low-delay cost &mdash; DiscreteRTC composes cleanly with advanced inference-time methods.
             </p>
 
             <h3>5.2 &nbsp;Real-World Results</h3>
             <p>
-                We validate DiscreteRTC on a real robot platform, focusing on dynamic tasks where inference latency
-                and control frequency have a crucial impact on closed-loop performance. We design two tasks that
-                directly stress reactiveness &mdash; <b>Dynamic Pick</b> and <b>Dynamic Place</b> &mdash; in which
-                the robot must pick a moving object or place an object on a moving platform, requiring continuous
-                pose re-estimation and smooth execution.
-            </p>
-            <p>
-                Hardware: a UR5e arm with a Robotiq gripper and a wrist-mounted RGB camera. All policies share a
-                Qwen2.5-VL-3B-Instruct VLM backbone paired with a layerwise cross-attention DiT action head
-                (StarVLA). The robot operates at 20&nbsp;Hz on a single RTX 4090. Each method is evaluated over 20
-                trials per task with $d{=}4, s{=}4$.
+                We validate DiscreteRTC on a UR5e + Robotiq gripper with a wrist-mounted RGB camera, running at
+                20&nbsp;Hz on a single RTX 4090. All policies share a Qwen2.5-VL-3B-Instruct VLM backbone with a
+                layerwise cross-attention DiT action head (StarVLA). Two reactiveness-stress tasks &mdash;
+                <b>Dynamic Pick</b> (moving object) and <b>Dynamic Place</b> (moving platform) &mdash; are each
+                evaluated over 20 trials.
             </p>
 
             <div class="fig-wrap">
@@ -1010,13 +1003,12 @@
                 </table>
             </div>
             <p class="fig-caption">
-                <b>Table 1:</b> Both Sync baselines completely fail (0%), confirming that reactive asynchronous
-                execution is indispensable in these regimes. DiscreteRTC outperforms ContinuousRTC with the largest
-                gap on the continuously moving Dynamic Pick target. The two asynchronous methods move in opposite
-                directions on cost: ContinuousRTC <em>inflates</em> flow-matching cost (151 &rarr; 256 ms, $\sim$1.7&times;
-                $\Pi$GDM overhead), whereas DiscreteRTC <em>reduces</em> discrete diffusion cost (303 &rarr; 206 ms)
-                since fewer tokens need to be unmasked. The benefits of RTC and discrete diffusion compound rather
-                than conflict.
+                <b>Table 1:</b> Both Sync baselines completely fail (0%), confirming reactive asynchronous execution
+                is indispensable. DiscreteRTC tops ContinuousRTC with the largest gap on the continuously moving
+                Dynamic Pick. Costs move in opposite directions: ContinuousRTC <em>inflates</em> flow-matching
+                inference (151 &rarr; 256&nbsp;ms, $\sim$1.7&times; $\Pi$GDM overhead), while DiscreteRTC
+                <em>reduces</em> discrete diffusion inference (303 &rarr; 206&nbsp;ms) &mdash; RTC and discrete
+                diffusion compound rather than conflict.
             </p>
 
             <h4>Dynamic Pick</h4>
@@ -1025,7 +1017,7 @@
                     <video autoplay muted loop playsinline preload="metadata">
                         <source src="static/videos/realworld/pick-sync-4x.mp4" type="video/mp4">
                     </video>
-                    <div class="video-label">Continuous Sync (4&times;)</div>
+                    <div class="video-label">Sync</div>
                 </div>
                 <div class="video-cell">
                     <video autoplay muted loop playsinline preload="metadata">
@@ -1047,7 +1039,7 @@
                     <video autoplay muted loop playsinline preload="metadata">
                         <source src="static/videos/realworld/place-sync-4x.mp4" type="video/mp4">
                     </video>
-                    <div class="video-label">Continuous Sync (4&times;)</div>
+                    <div class="video-label">Sync</div>
                 </div>
                 <div class="video-cell">
                     <video autoplay muted loop playsinline preload="metadata">
@@ -1105,13 +1097,13 @@
             <h2>Citation</h2>
             <div class="bibtex-box">
                 <button class="copy-btn" onclick="copyBibtex(this)">Copy</button>
-<pre>@inproceedings{wang2026discreterc,
-  title     = {DiscreteRTC: Discrete Diffusion Policies are Natural Asynchronous Executors},
-  author    = {Wang, Pengcheng and Hong, Kaiwen and Peng, Chensheng and
-               Driggs-Campbell, Katherine and Tomizuka, Masayoshi and
-               Xu, Chenfeng and Tang, Chen},
-  booktitle = {Conference on Robot Learning (CoRL)},
-  year      = {2026}
+<pre>@article{wang2026discreterc,
+  title         = {DiscreteRTC: Discrete Diffusion Policies are Natural Asynchronous Executors},
+  author        = {Wang, Pengcheng and Hong, Kaiwen and Peng, Chensheng and
+                   Driggs-Campbell, Katherine and Tomizuka, Masayoshi and
+                   Xu, Chenfeng and Tang, Chen},
+  journal       = {arXiv preprint},
+  year          = {2026}
 }</pre>
             </div>
         </section>
@@ -1131,25 +1123,25 @@
         const datasets = {
             'main': {
                 src: "static/figures/experiments/kinetix/KinetixMain/KinetixMain.svg",
-                label: "Kinetix Main Results — solve rate & throughput across delays (Fig. 4)",
+                // label: "Kinetix Main Results — solve rate & throughput across delays (Fig. 4)",
                 ar: "1049 / 435",
                 wide: false
             },
             'stepablation': {
                 src: "static/figures/experiments/kinetix/Step%26Ablation/Step%26Ablation.svg",
-                label: "Iterative Steps & Extended Variants (Fig. 5) — fewer steps + beats training-time RTC + composes with VLASH",
+                // label: "Iterative Steps & Extended Variants (Fig. 5) — fewer steps + beats training-time RTC + composes with VLASH",
                 ar: "1043 / 435",
                 wide: false
             },
             'mainfull': {
                 src: "static/figures/experiments/kinetix/KinetixMainFull/KinetixMainFull.svg",
-                label: "Per-Environment Detailed Main Results (Appendix) — scroll horizontally for full detail",
+                // label: "Per-Environment Detailed Main Results (Appendix)",
                 ar: "1874 / 844",
                 wide: true
             },
             'finetune': {
                 src: "static/figures/experiments/kinetix/FinetuneApp/FinetuneApp.svg",
-                label: "Inpainting Fine-tuning Ablation — naive prefix-unmasking hurts (Appendix) — scroll horizontally",
+                // label: "Inpainting Fine-tuning Ablation (Appendix)",
                 ar: "1874 / 844",
                 wide: true
             }
@@ -1170,7 +1162,7 @@
                         <div class="fig-wrap${wideClass}" style="margin: 0; border: none; box-shadow: none; border-radius: 12px; --ar: ${data.ar};">
                             <object data="${data.src}" type="image/svg+xml" aria-label="${data.label}"></object>
                         </div>
-                        <div class="result-label">${data.label}</div>
+                        <!-- <div class="result-label">${data.label}</div> -->
                     </div>
                 `;
                 container.style.opacity = '1';
