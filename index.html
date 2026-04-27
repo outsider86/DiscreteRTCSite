@@ -698,12 +698,6 @@
             </div>
 
             <div class="link-buttons">
-                <a href="static/paper.pdf" class="btn-main">
-                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6zm-1 2l5 5h-5V4zM6 20V4h5v5h5v11H6z" />
-                    </svg>
-                    Paper
-                </a>
                 <a href="#" class="btn-main">
                     <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14z"/>
@@ -739,13 +733,9 @@
             <h2>TL;DR</h2>
             <p style="font-size: 1.1rem; font-weight: 500; margin-bottom: 0;">
                 Flow-matching-based real-time chunking (RTC) is ill-suited for asynchronous execution due to four critical limitations.
-                By replacing the action head with a discrete diffusion policy, all the aforementioned limitations can be resolved at once, 
-                being simpler to implement, faster at inference, and better at execution.
+                By replacing the action head with a discrete diffusion policy, all the aforementioned limitations can be resolved at once.
                 Or, to put it simply: <em><b>Discrete diffusion policies are natural asynchronous executors.</b></em>
-            </p>
-
-            <p>
-                During asynchronous execution, discrete diffusion policy is:
+                During asynchronous execution, discrete diffusion policy achieves:
             </p>
 
             <div class="stat-grid">
